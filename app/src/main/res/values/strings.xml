@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">MusicDNA</string>
+    <string name="Home">主页</string>
+    <string name="Local_Music">本地音乐</string>
+    <string name="Playlists">播放列表</string>
+    <string name="Recently_Played">最近播放的</string>
+    <string name="Favourites">最喜欢的</string>
+    <string name="Folders">文件夹</string>
+    <string name="Saved_DNA">已保存的DNA</string>
+    <string name="Settings">设置</string>
+    <string name="title_activity_home">Music DNA</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="Search">搜索</string>
+    <string name="Sleep_Timer">睡眠计时器</string>
+    <string name="action_settings">设置</string>
+    <string name="Cancel">取消</string>
+    <string name="Set">设置</string>
 </resources>
