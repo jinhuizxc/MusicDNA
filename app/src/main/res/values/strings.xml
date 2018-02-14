@@ -17,4 +17,27 @@
     <string name="action_settings">设置</string>
     <string name="Cancel">取消</string>
     <string name="Set">设置</string>
+    <string name="LOCAL">当地音乐</string>
+    <string name="PLAYLIST">播放列表</string>
+    <string name="FAVOURITE">最喜欢的</string>
+    <string name="NEW_PLAYLIST">新播放列表</string>
+    <string name="ALL_PLAYLISTS">所有播放列表</string>
+    <string name="ALL_FOLDERS">所有文件夹</string>
+    <string name="SAVED_DNA">保存的DNA</string>
+    <string name="album">专辑</string>
+    <string name="artist">艺术家</string>
+    <string name="RECENT">最近</string>
+    <string name="SETTINGS">设置</string>
+    <string name="DNA_Density">DNA密度</string>
+    <string name="Theme_Color">主题颜色</string>
+    <string name="Art_behind_the_DNA">DNA背后的艺术</string>
+    <string name="Stream_over_Wifi_only">仅仅基于WiFi的流</string>
+    <string name="About">关于</string>
+    <string name="Reset_settings">重置设置</string>
+    <!-- About Fragment strings -->
+    <string name="mdg_description">An Active students group at IIT Roorkee directed towards developing useful applications</string>
+    <string name="ABOUT">关于</string>
+    <string name="EDIT">编辑</string>
+    <string name="SAVE">保存</string>
+    <string name="Title">标题</string>
 </resources>

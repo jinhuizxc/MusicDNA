@@ -10,4 +10,5 @@
 
     // 配置颜色
     <color name="colorDark">#111111</color>
+    <color name="colorListItem">#111111</color>
 </resources>

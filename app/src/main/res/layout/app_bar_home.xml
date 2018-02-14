@@ -272,6 +272,7 @@
                 android:layout_marginRight="10dp"
                 android:background="#565656" />
 
+            <!--布局显示在音乐列表下方-->
             <RelativeLayout
                 android:id="@+id/bannerContainer"
                 android:layout_width="match_parent"

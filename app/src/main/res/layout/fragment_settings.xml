@@ -1,0 +1,277 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorDark"
+    android:clickable="true"
+    android:clipToPadding="false">
+
+    <RelativeLayout
+        android:id="@+id/settings_action_container"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#111111"
+        android:elevation="12dp">
+
+        <ImageView
+            android:id="@+id/settings_back_btn"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/custom_ripple"
+            android:clickable="true"
+            android:padding="12dp"
+            android:src="@drawable/back2" />
+
+        <TextView
+            android:id="@+id/settings_fragment_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/SETTINGS"
+            android:textColor="#FFFFFF"
+            android:textSize="25sp" />
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bottom_margin_layout"
+        android:layout_below="@+id/settings_action_container">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="1dp">
+
+            <RelativeLayout
+                android:id="@+id/density_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/custom_ripple"
+                android:clickable="true"
+                android:padding="5dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_alignParentTop="true"
+                    android:layout_margin="7dp"
+                    android:layout_toLeftOf="@+id/density_value"
+                    android:padding="5dp"
+                    android:text="@string/DNA_Density"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+
+                <TextView
+                    android:id="@+id/density_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="10dp"
+                    android:text="100"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/density_card"
+                android:background="#232323" />
+
+            <RelativeLayout
+                android:id="@+id/theme_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/density_card"
+                android:background="@drawable/custom_ripple"
+                android:clickable="true"
+                android:padding="5dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_margin="7dp"
+                    android:padding="5dp"
+                    android:text="@string/Theme_Color"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+
+                <ImageView
+                    android:id="@+id/theme_color_img"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_margin="10dp"
+                    android:background="#000000" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/theme_card"
+                android:background="#232323" />
+
+            <RelativeLayout
+                android:id="@+id/album_art_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/theme_card"
+                android:background="@drawable/custom_ripple"
+                android:clickable="true"
+                android:padding="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_margin="7dp"
+                    android:padding="5dp"
+                    android:text="@string/Art_behind_the_DNA"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/album_art_toggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="1dp"
+                    android:checked="false"
+                    android:clickable="true"
+                    android:theme="@style/CustomSwitch" />
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/album_art_card"
+                android:background="#232323" />
+
+            <RelativeLayout
+                android:id="@+id/wifi_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/album_art_card"
+                android:background="@drawable/custom_ripple"
+                android:clickable="true"
+                android:padding="5dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_margin="7dp"
+                    android:padding="5dp"
+                    android:text="@string/Stream_over_Wifi_only"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+
+                <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/wifi_stream_toggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="1dp"
+                    android:checked="false"
+                    android:clickable="true"
+                    android:theme="@style/CustomSwitch" />
+
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/wifi_card"
+                android:background="#232323" />
+
+            <RelativeLayout
+                android:id="@+id/about_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/wifi_card"
+                android:background="@drawable/custom_ripple"
+                android:clickable="true"
+                android:padding="5dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
+                    android:layout_centerVertical="true"
+                    android:layout_margin="7dp"
+                    android:padding="5dp"
+                    android:text="@string/About"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/about_card"
+                android:background="#232323" />
+
+            <RelativeLayout
+                android:id="@+id/reset_settings_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/about_card"
+                android:background="@drawable/custom_ripple"
+                android:clickable="true"
+                android:padding="5dp">
+
+                <TextView
+                    android:id="@+id/setiings_reset"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_margin="7dp"
+                    android:padding="5dp"
+                    android:text="@string/Reset_settings"
+                    android:textColor="#FFF"
+                    android:textSize="18dp" />
+                <ImageView
+                    android:id="@+id/settings_warning_sign"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:paddingRight="3dp"
+                    android:layout_margin="7dp"
+                    android:src="@drawable/ic_warning_sign"/>
+            </RelativeLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/reset_settings_card"
+                android:background="#232323" />
+
+        </RelativeLayout>
+
+    </ScrollView>
+
+    <View
+        android:id="@+id/bottom_margin_layout"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_alignParentBottom="true"
+        android:background="@color/colorDark"
+        android:clickable="true" />
+
+</RelativeLayout>
