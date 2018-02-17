@@ -18,15 +18,15 @@ public class MusicDNAApplication extends Application {
 
     private RefWatcher refWatcher;
 
-    public RefWatcher getRefWatcher() {
-        return refWatcher;
-    }
+//    public RefWatcher getRefWatcher() {
+//        return refWatcher;
+//    }
 
     // get方法
-//    public RefWatcher getRefWatcher(Context context) {
-//        MusicDNAApplication application = (MusicDNAApplication) context.getApplicationContext();
-//        return application.refWatcher;
-//    }
+    public static RefWatcher getRefWatcher(Context context) {
+        MusicDNAApplication application = (MusicDNAApplication) context.getApplicationContext();
+        return application.refWatcher;
+    }
 
     @Override
     public void onCreate() {

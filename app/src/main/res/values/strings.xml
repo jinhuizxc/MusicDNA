@@ -17,7 +17,6 @@
     <string name="action_settings">设置</string>
     <string name="Cancel">取消</string>
     <string name="Set">设置</string>
-    <string name="LOCAL">当地音乐</string>
     <string name="PLAYLIST">播放列表</string>
     <string name="FAVOURITE">最喜欢的</string>
     <string name="NEW_PLAYLIST">新播放列表</string>
@@ -40,4 +39,16 @@
     <string name="EDIT">编辑</string>
     <string name="SAVE">保存</string>
     <string name="Title">标题</string>
+    <string name="Play">播放</string>
+    <string name="Play_Next">播放下一首</string>
+    <string name="Add_to_Queue">添加到队列</string>
+    <string name="Add_to_Playlist">添加到播放列表</string>
+    <string name="Add_to_Favourites">添加到喜爱</string>
+    <string name="Share">分享</string>
+    <string name="Getting_Saved_Data">获取保存的数据</string>
+    <string name="Songs">歌曲</string>
+    <string name="Albums">专辑</string>
+    <string name="Artists">艺术家</string>
+    <string name="Recent">最近</string>
+
 </resources>

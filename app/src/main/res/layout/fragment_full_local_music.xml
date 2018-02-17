@@ -44,7 +44,7 @@
             android:layout_centerVertical="true"
             android:layout_marginLeft="5dp"
             android:layout_toRightOf="@+id/local_fragment_back_btn"
-            android:text="@string/LOCAL"
+            android:text="@string/Local_Music"
             android:textColor="#FFFFFF"
             android:textSize="23sp" />
 

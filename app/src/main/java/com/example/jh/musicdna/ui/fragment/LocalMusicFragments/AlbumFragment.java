@@ -1,4 +1,4 @@
-package com.example.jh.musicdna.ui.fragment.StreamMusicFragment;
+package com.example.jh.musicdna.ui.fragment.LocalMusicFragments;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -10,16 +10,16 @@ import android.view.ViewGroup;
 import com.example.jh.musicdna.R;
 
 /**
- * Created by jinhui on 2018/2/15.
+ * Created by jinhui on 2018/2/16.
  * Email:1004260403@qq.com
  */
 
-public class StreamMusicFragment extends Fragment {
+public class AlbumFragment extends Fragment {
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_stream_music, container, false);
+        return inflater.inflate(R.layout.fragment_album, container, false);
     }
 }

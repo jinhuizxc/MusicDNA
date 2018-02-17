@@ -3,16 +3,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorDark"
-    android:clickable="true"
-    android:padding="5dp"
-    tools:context="com.example.jh.musicdna.ui.fragment.StreamFragment.StreamMusicFragment">
+    android:clickable="true">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/trackList"
+        android:id="@+id/albums_recycler"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_above="@+id/bottom_margin_layout"
-        android:background="@color/colorDark" />
+        android:layout_marginTop="3dp"/>
 
     <View
         android:id="@+id/bottom_margin_layout"
