@@ -1,4 +1,4 @@
-package com.example.jh.musicdna.ui.fragment.LocalMusicFragments;
+package com.example.jh.musicdna.ui.fragment.LocalMusicFragments.localmusic;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
@@ -92,7 +92,7 @@ public class LocalMusicFragment extends Fragment {
 
         shuffleFab = (FloatingActionButton) view.findViewById(R.id.play_all_fab_local);
 
-        // 本地音乐列表为0时不可见
+        // 本地音乐列表为0时: FloatingActionButton不可见
 //        if (HomeActivity.localTrackList.size() == 0) {
 //            shuffleFab.setVisibility(View.INVISIBLE);
 //        }
@@ -186,7 +186,7 @@ public class LocalMusicFragment extends Fragment {
                 .setContentTitle("All Songs")
                 .setContentText("All local Songs listed here.Click to Play.Long click for more options")
                 .build();
-        showCase.setButtonText("Next");
+        showCase.setButtonText("下一步");
         showCase.setButtonPosition(HomeActivity.lps);
         showCase.overrideButtonClick(new View.OnClickListener() {
             int count1 = 0;

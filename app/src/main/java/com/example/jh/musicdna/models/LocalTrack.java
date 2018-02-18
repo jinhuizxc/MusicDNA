@@ -72,4 +72,15 @@ public class LocalTrack {
         this.artist = artist;
     }
 
+    @Override
+    public String toString() {
+        return "LocalTrack{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", artist='" + artist + '\'' +
+                ", album='" + album + '\'' +
+                ", path='" + path + '\'' +
+                ", duration=" + duration +
+                '}';
+    }
 }

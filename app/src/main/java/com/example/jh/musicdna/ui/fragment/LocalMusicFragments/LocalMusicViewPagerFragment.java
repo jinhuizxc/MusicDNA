@@ -24,6 +24,9 @@ import com.example.jh.musicdna.MusicDNAApplication;
 import com.example.jh.musicdna.R;
 import com.example.jh.musicdna.ui.activity.HomeActivity;
 import com.example.jh.musicdna.ui.activity.SplashActivity;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.album.AlbumFragment;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.artist.ArtistFragment;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.localmusic.LocalMusicFragment;
 import com.squareup.leakcanary.RefWatcher;
 
 import java.util.ArrayList;

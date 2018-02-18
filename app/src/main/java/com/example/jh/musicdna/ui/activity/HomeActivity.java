@@ -1,5 +1,6 @@
 package com.example.jh.musicdna.ui.activity;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentResolver;
@@ -58,7 +59,7 @@ import com.example.jh.musicdna.Config;
 import com.example.jh.musicdna.R;
 import com.example.jh.musicdna.broadcastreceiver.HeadSetReceiver;
 import com.example.jh.musicdna.clickitemtouchlistener.ClickItemTouchListener;
-import com.example.jh.musicdna.custombottomsheets.CustomGeneralBottomSheetDialog;
+import com.example.jh.musicdna.custombottomsheets.CustomLocalBottomSheetDialog;
 import com.example.jh.musicdna.imageloader.ImageLoader;
 import com.example.jh.musicdna.interfaces.StreamService;
 import com.example.jh.musicdna.models.Album;
@@ -89,7 +90,10 @@ import com.example.jh.musicdna.ui.fragment.EqualizerFragment.EqualizerFragment;
 import com.example.jh.musicdna.ui.fragment.FavouritesFragment.FavouritesFragment;
 import com.example.jh.musicdna.ui.fragment.FolderContentFragment.FolderContentFragment;
 import com.example.jh.musicdna.ui.fragment.FolderFragment.FolderFragment;
-import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.LocalMusicFragment;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.RecentlyAddedSongsFragment;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.artist.ArtistFragment;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.album.AlbumFragment;
+import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.localmusic.LocalMusicFragment;
 import com.example.jh.musicdna.ui.fragment.LocalMusicFragments.LocalMusicViewPagerFragment;
 import com.example.jh.musicdna.ui.fragment.NewPlaylistFragment.NewPlaylistFragment;
 import com.example.jh.musicdna.ui.fragment.PlayerFragment.PlayerFragment;
@@ -134,7 +138,10 @@ import static android.view.View.GONE;
 public class HomeActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener,
         SearchView.OnQueryTextListener,
-        LocalMusicFragment.OnLocalTrackSelectedListener{
+        LocalMusicFragment.OnLocalTrackSelectedListener,
+        AlbumFragment.onAlbumClickListener,
+        ArtistFragment.onArtistClickListener,
+        RecentlyAddedSongsFragment.OnLocalTrackSelectedListener {
 
     private static final String TAG = "HomeActivity";
     // 链表集合
@@ -166,10 +173,12 @@ public class HomeActivity extends AppCompatActivity
     TextView recentsNothingText;
     TextView streamNothingText;
     public FrameLayout bottomToolbar;
-    public ImageLoader imgLoader;
+
     ImageView[] imgView = new ImageView[10];
     public CircleImageView spImgHome;
     public TextView spTitleHome;
+    View playerContainer;
+
 
     public static Track selectedTrack;
 
@@ -218,6 +227,7 @@ public class HomeActivity extends AppCompatActivity
     int timerTimeOutDuration = 0;
     Handler sleepHandler;
 
+    public ImageLoader imgLoader;
     public Context ctx;
     // 显示引导页
     ShowcaseView showCase;
@@ -310,6 +320,7 @@ public class HomeActivity extends AppCompatActivity
     // 最小的流长度
     public static float minAudioStrength = 0.40f;
 
+    Call<List<Track>> call;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -356,7 +367,6 @@ public class HomeActivity extends AppCompatActivity
         }
 
 
-
     }
 
     private void initView() {
@@ -389,7 +399,12 @@ public class HomeActivity extends AppCompatActivity
         // 设置打开navigation显示选中的item项。
         navigationView.setCheckedItem(R.id.nav_home);
 
+        imgLoader = new ImageLoader(this);
         ctx = this;
+        // 初始化头部image
+        initializeHeaderImages();
+
+
         minuteList = new ArrayList<>();
         for (int i = 1; i < 25; i++) {
             minuteList.add(String.valueOf(i * 5));
@@ -434,6 +449,7 @@ public class HomeActivity extends AppCompatActivity
         showCase.setButtonPosition(lps);
         showCase.overrideButtonClick(new View.OnClickListener() {
             int count1 = 0;
+
             @Override
             public void onClick(View v) {
                 count1++;
@@ -495,14 +511,27 @@ public class HomeActivity extends AppCompatActivity
         recentsNothingText = (TextView) findViewById(R.id.recentsNothingText);
 
         // dialog的初始化, 暂时注释掉
-//        progress = new Dialog(ctx);
-//        progress.setCancelable(false);
-//        progress.requestWindowFeature(Window.FEATURE_NO_TITLE);
-//        progress.setContentView(R.layout.custom_progress_dialog);
-//        progress.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
-//        progress.show();
+        progress = new Dialog(ctx);
+        progress.setCancelable(false);
+        progress.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        progress.setContentView(R.layout.custom_progress_dialog);
+        progress.getWindow().setBackgroundDrawable(new ColorDrawable(android.graphics.Color.TRANSPARENT));
+        progress.show();
         // 启动异步任务,加载保存的数据，暂时注释掉
-//        new loadSavedData().execute();
+        new loadSavedData().execute();
+    }
+
+    private void initializeHeaderImages() {
+        imgView[0] = (ImageView) findViewById(R.id.home_header_img_1);
+        imgView[1] = (ImageView) findViewById(R.id.home_header_img_2);
+        imgView[2] = (ImageView) findViewById(R.id.home_header_img_3);
+        imgView[3] = (ImageView) findViewById(R.id.home_header_img_4);
+        imgView[4] = (ImageView) findViewById(R.id.home_header_img_5);
+        imgView[5] = (ImageView) findViewById(R.id.home_header_img_6);
+        imgView[6] = (ImageView) findViewById(R.id.home_header_img_7);
+        imgView[7] = (ImageView) findViewById(R.id.home_header_img_8);
+        imgView[8] = (ImageView) findViewById(R.id.home_header_img_9);
+        imgView[9] = (ImageView) findViewById(R.id.home_header_img_10);
     }
 
     @Override
@@ -558,6 +587,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 显示各部分fragment
+     *
      * @param type
      */
     private void showFragment(String type) {
@@ -751,7 +781,7 @@ public class HomeActivity extends AppCompatActivity
                     .commitAllowingStateLoss();
         } else if (type.equals("viewAlbum") && !isAlbumVisible) {
             isAlbumVisible = true;
-            android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+            FragmentManager fm = getSupportFragmentManager();
             ViewAlbumFragment newFragment = (ViewAlbumFragment) fm.findFragmentByTag("viewAlbum");
             if (newFragment == null) {
                 newFragment = new ViewAlbumFragment();
@@ -875,6 +905,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 隐藏fragment
+     *
      * @param type
      */
     private void hideFragment(String type) {
@@ -1215,6 +1246,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 更新流列表
+     *
      * @param query
      */
     private void updateStreamingList(String query) {
@@ -1287,7 +1319,7 @@ public class HomeActivity extends AppCompatActivity
     }
 
     /**
-     *  // 停止加载指示器
+     * // 停止加载指示器
      */
     private void stopLoadingIndicator() {
         findViewById(R.id.loadingIndicator).setVisibility(View.INVISIBLE);
@@ -1298,7 +1330,7 @@ public class HomeActivity extends AppCompatActivity
     }
 
     /**
-     *  // 开始加载指示器
+     * // 开始加载指示器
      */
     private void startLoadingIndicator() {
         findViewById(R.id.loadingIndicator).setVisibility(View.VISIBLE);
@@ -1308,6 +1340,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 更新本地列表
+     *
      * @param query
      */
     private void updateLocalList(String query) {
@@ -1357,7 +1390,9 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-
+    /**
+     * 得到保存的dna数据
+     */
     public void getSavedData() {
         try {
             Gson gson = new Gson();
@@ -1401,6 +1436,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * bottomsheet的监听
+     *
      * @param position
      * @param action
      * @param fragment
@@ -1522,6 +1558,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 显示添加到音乐列表的对话框
+     *
      * @param track
      */
     private void showAddToPlaylistDialog(final UnifiedTrack track) {
@@ -1602,11 +1639,177 @@ public class HomeActivity extends AppCompatActivity
         dialog.show();
     }
 
-    Call<List<Track>> call;
 
     @Override
     public void onLocalTrackSelected(int position) {
-       Log.e(TAG, "onLocalTrackSelected");
+        Log.e(TAG, "onLocalTrackSelected"); //  E/HomeActivity: onLocalTrackSelected
+        isReloaded = false;
+        HideBottomFakeToolbar();
+
+        // 2/19 关于打开播放界面的方法要认真分析处理在整理下！
+//        if (!queueCall) {
+//            // 隐藏键盘
+//            CommonUtils.hideKeyboard(this);
+//
+//            searchView.setQuery("", true);
+//            searchView.setIconified(true);
+//            new Thread(new CancelCall()).start();
+//
+////            hideTabs();
+//            isPlayerVisible = true;
+//
+//            PlayerFragment frag = playerFragment;
+//            FragmentManager fm = getSupportFragmentManager();
+//            PlayerFragment newFragment = new PlayerFragment();
+//            if (frag == null) {
+//                playerFragment = newFragment;
+//                int flag = 0;
+//                for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
+//                    UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
+//                    if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
+//                        flag = 1;
+//                        isFavourite = true;
+//                        break;
+//                    }
+//                }
+//                if (flag == 0) {
+//                    isFavourite = false;
+//                }
+//
+//                playerFragment.localIsPlaying = true;
+//                playerFragment.localTrack = localSelectedTrack;
+//                fm.beginTransaction()
+//                        .setCustomAnimations(R.anim.slide_up,
+//                                R.anim.slide_down,
+//                                R.anim.slide_up,
+//                                R.anim.slide_down)
+//                        .add(R.id.player_frag_container, newFragment, "player")
+//                        .show(newFragment)
+//                        .commitAllowingStateLoss();
+//            } else {
+//                if (playerFragment.localTrack != null && playerFragment.localIsPlaying && localSelectedTrack.getTitle() == playerFragment.localTrack.getTitle()) {
+//
+//                } else {
+//                    int flag = 0;
+//                    for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
+//                        UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
+//                        if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
+//                            flag = 1;
+//                            isFavourite = true;
+//                            break;
+//                        }
+//                    }
+//                    if (flag == 0) {
+//                        isFavourite = false;
+//                    }
+//                    playerFragment.localIsPlaying = true;
+//                    playerFragment.localTrack = localSelectedTrack;
+//                    frag.refresh();
+//                }
+//            }
+//
+//            if (!isQueueVisible)
+//                showPlayer();
+//
+//        } else {
+//            PlayerFragment frag = playerFragment;
+//            playerFragment.localIsPlaying = true;
+//            playerFragment.localTrack = localSelectedTrack;
+//
+//            int flag = 0;
+//            for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
+//                UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
+//                if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
+//                    flag = 1;
+//                    isFavourite = true;
+//                    break;
+//                }
+//            }
+//            if (flag == 0) {
+//                isFavourite = false;
+//            }
+//            if (frag != null)
+//                frag.refresh();
+//        }
+//
+//        if (playerFragment != null && playerFragment.snappyRecyclerView != null) {
+//            playerFragment.snappyRecyclerView.getAdapter().notifyDataSetChanged();
+//            playerFragment.snappyRecyclerView.setTransparency();
+//        }
+//
+//        QueueFragment qFrag = (QueueFragment) fragMan.findFragmentByTag("queue");
+//        if (qFrag != null) {
+//            qFrag.updateQueueAdapter();
+//        }
+//
+//        UnifiedTrack track = new UnifiedTrack(true, playerFragment.localTrack, null);
+//        for (int i = 0; i < recentlyPlayed.getRecentlyPlayed().size(); i++) {
+//            if (recentlyPlayed.getRecentlyPlayed().get(i).getType() && recentlyPlayed.getRecentlyPlayed().get(i).getLocalTrack().getTitle().equals(track.getLocalTrack().getTitle())) {
+//                recentlyPlayed.getRecentlyPlayed().remove(i);
+////                rAdapter.notifyItemRemoved(i);
+//                break;
+//            }
+//        }
+//        recentlyPlayed.getRecentlyPlayed().add(0, track);
+//        if (recentlyPlayed.getRecentlyPlayed().size() == 51) {
+//            recentlyPlayed.getRecentlyPlayed().remove(50);
+//        }
+//        recentsRecycler.setVisibility(View.VISIBLE);
+//        recentsNothingText.setVisibility(View.INVISIBLE);
+//        continuePlayingList.clear();
+//        for (int i = 0; i < Math.min(10, recentlyPlayed.getRecentlyPlayed().size()); i++) {
+//            continuePlayingList.add(recentlyPlayed.getRecentlyPlayed().get(i));
+//        }
+//        rAdapter.notifyDataSetChanged();
+//        refreshHeaderImages();
+//
+//        RecentsFragment rFrag = (RecentsFragment) fragMan.findFragmentByTag("recent");
+//        if (rFrag != null && rFrag.rtAdpater != null) {
+//            rFrag.rtAdpater.notifyDataSetChanged();
+//        }
+
+    }
+
+    @Override
+    public void onAlbumClick() {
+        showFragment("viewAlbum");
+    }
+
+    @Override
+    public void onArtistClick() {
+        searchView.setQuery("", true);
+        searchView.setIconified(true);
+        showFragment("viewArtist");
+    }
+
+    /**
+     * queue的item项点击
+     *
+     * @param position
+     */
+    public void onQueueItemClicked2(int position) {
+        if (position <= (queue.getQueue().size() - 1)) {
+            queueCurrentIndex = position;
+            UnifiedTrack ut = queue.getQueue().get(position);
+            if (ut.getType()) {
+                LocalTrack track = ut.getLocalTrack();
+                localSelectedTrack = track;
+                streamSelected = false;
+                localSelected = true;
+                queueCall = true;
+                isReloaded = false;
+                onLocalTrackSelected(position);
+            } else {
+                Track track = ut.getStreamTrack();
+                selectedTrack = track;
+                streamSelected = true;
+                localSelected = false;
+                queueCall = true;
+                isReloaded = false;
+                // 2/19 暂时注释掉
+//                onTrackSelected(position);
+            }
+        }
     }
 
     private class CancelCall implements Runnable {
@@ -1617,7 +1820,7 @@ public class HomeActivity extends AppCompatActivity
         }
     }
 
-    private class SavePlaylists extends AsyncTask<Void, Void, Void>  {
+    private class SavePlaylists extends AsyncTask<Void, Void, Void> {
         @Override
         protected Void doInBackground(Void... voids) {
             if (!isSavePLaylistsRunning) {
@@ -1635,121 +1838,123 @@ public class HomeActivity extends AppCompatActivity
     }
 
     // 2/17，没写完，待继续写，暂时注释掉
-//    private class loadSavedData extends AsyncTask<String, Void, String> {
-//        @Override
-//        protected String doInBackground(String... strings) {
-//            getSavedData();
-//            return "done";
-//        }
-//
-//        @Override
-//        protected void onPostExecute(String s) {
-//            super.onPostExecute(s);
-//            progress.dismiss();
-//            main.runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//
-//                    if (settings == null) {
-//                        settings = new Settings();
-//                    }
-//
-//                    themeColor = settings.getThemeColor();
-//                    minAudioStrength = settings.getMinAudioStrength();
-//
-//
-//                    navigationView.setItemIconTintList(ColorStateList.valueOf(themeColor));
-//                    collapsingToolbar.setContentScrimColor(themeColor);
-//                    customLinearGradient.setStartColor(themeColor);
-//                    customLinearGradient.invalidate();
-//
-//                    try {
-//                        if (Build.VERSION.SDK_INT >= 21) {
-//                            Window window = ((Activity) ctx).getWindow();
-//                            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-//                            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-//                            window.setStatusBarColor(CommonUtils.getDarkColor(themeColor));
-//                        }
-//                    } catch (Exception e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                    if (prevVersionCode == -1 || prevVersionCode <= 30) {
-//                        savedDNAs = null;
-//                    }
-//
-//                    if (allPlaylists == null) {
-//                        allPlaylists = new AllPlaylists();
-//                    }
-//
-//                    if (tempPlaylist == null) {
-//                        tempPlaylist = new Playlist(null, null);
-//                    }
-//
-//                    if (queue == null) {
-//                        queue = new Queue();
-//                    }
-//
-//                    if (favouriteTracks == null) {
-//                        favouriteTracks = new Favourite();
-//                    }
-//
-//                    if (recentlyPlayed == null) {
-//                        recentlyPlayed = new RecentlyPlayed();
-//                    }
-//                    if (allMusicFolders == null) {
-//                        allMusicFolders = new AllMusicFolders();
-//                    }
-//                    if (savedDNAs == null) {
-//                        savedDNAs = new AllSavedDNA();
-//                    }
-//
-//                    if (equalizerModel == null) {
-//                        equalizerModel = new EqualizerModel();
-//                        isEqualizerEnabled = true;
-//                        isEqualizerReloaded = false;
-//                    } else {
-//                        isEqualizerEnabled = equalizerModel.isEqualizerEnabled();
-//                        isEqualizerReloaded = true;
-//                        seekbarpos = equalizerModel.getSeekbarpos();
-//                        presetPos = equalizerModel.getPresetPos();
-//                        reverbPreset = equalizerModel.getReverbPreset();
-//                        bassStrength = equalizerModel.getBassStrength();
-//                    }
-//
-//                    // 保存版本号的异步任务
-//                    new SaveVersionCode().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-//
-//                    getLocalSongs();
-//                    refreshHeaderImages();
-//
-//                    if (queue != null && queue.getQueue().size() != 0) {
-//                        UnifiedTrack utHome = queue.getQueue().get(queueCurrentIndex);
-//                        if (utHome.getType()) {
-//                            imgLoader.DisplayImage(utHome.getLocalTrack().getPath(), spImgHome);
-//                            spTitleHome.setText(utHome.getLocalTrack().getTitle());
-//                        } else {
-//                            imgLoader.DisplayImage(utHome.getStreamTrack().getArtworkURL(), spImgHome);
-//                            spTitleHome.setText(utHome.getStreamTrack().getTitle());
-//                        }
-//                    } else {
-//                        bottomToolbar.setVisibility(GONE);
-//                    }
-//
-//                    for (int i = 0; i < Math.min(10, recentlyPlayed.getRecentlyPlayed().size()); i++) {
-//                        continuePlayingList.add(recentlyPlayed.getRecentlyPlayed().get(i));
-//                    }
-//
-//                    rAdapter = new RecentsListHorizontalAdapter(continuePlayingList, ctx);
-//                    recentsRecycler = (RecyclerView) findViewById(R.id.recentsMusicList_home);
-//                    recentsRecycler.setNestedScrollingEnabled(false);
-//                    LinearLayoutManager mLayoutManager3 = new LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false);
-//                    recentsRecycler.setLayoutManager(mLayoutManager3);
-//                    recentsRecycler.setItemAnimator(new DefaultItemAnimator());
-//                    AlphaInAnimationAdapter alphaAdapter3 = new AlphaInAnimationAdapter(rAdapter);
-//                    alphaAdapter3.setFirstOnly(false);
-//                    recentsRecycler.setAdapter(alphaAdapter3);
-//
+    @SuppressLint("StaticFieldLeak")
+    private class loadSavedData extends AsyncTask<String, Void, String> {
+        @Override
+        protected String doInBackground(String... strings) {
+            getSavedData();
+            return "done";
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+            progress.dismiss();
+            main.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    if (settings == null) {
+                        settings = new Settings();
+                    }
+
+                    themeColor = settings.getThemeColor();
+                    minAudioStrength = settings.getMinAudioStrength();
+
+
+                    navigationView.setItemIconTintList(ColorStateList.valueOf(themeColor));
+                    collapsingToolbar.setContentScrimColor(themeColor);
+                    customLinearGradient.setStartColor(themeColor);
+                    customLinearGradient.invalidate();
+
+                    try {
+                        if (Build.VERSION.SDK_INT >= 21) {
+                            Window window = ((Activity) ctx).getWindow();
+                            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+                            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+                            window.setStatusBarColor(CommonUtils.getDarkColor(themeColor));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    if (prevVersionCode == -1 || prevVersionCode <= 30) {
+                        savedDNAs = null;
+                    }
+
+                    if (allPlaylists == null) {
+                        allPlaylists = new AllPlaylists();
+                    }
+
+                    if (tempPlaylist == null) {
+                        tempPlaylist = new Playlist(null, null);
+                    }
+
+                    if (queue == null) {
+                        queue = new Queue();
+                    }
+
+                    if (favouriteTracks == null) {
+                        favouriteTracks = new Favourite();
+                    }
+
+                    if (recentlyPlayed == null) {
+                        recentlyPlayed = new RecentlyPlayed();
+                    }
+                    if (allMusicFolders == null) {
+                        allMusicFolders = new AllMusicFolders();
+                    }
+                    if (savedDNAs == null) {
+                        savedDNAs = new AllSavedDNA();
+                    }
+
+                    if (equalizerModel == null) {
+                        equalizerModel = new EqualizerModel();
+                        isEqualizerEnabled = true;
+                        isEqualizerReloaded = false;
+                    } else {
+                        isEqualizerEnabled = equalizerModel.isEqualizerEnabled();
+                        isEqualizerReloaded = true;
+                        seekbarpos = equalizerModel.getSeekbarpos();
+                        presetPos = equalizerModel.getPresetPos();
+                        reverbPreset = equalizerModel.getReverbPreset();
+                        bassStrength = equalizerModel.getBassStrength();
+                    }
+
+                    // 保存版本号的异步任务
+                    new SaveVersionCode().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+                    getLocalSongs();
+                    refreshHeaderImages();
+
+                    if (queue != null && queue.getQueue().size() != 0) {
+                        UnifiedTrack utHome = queue.getQueue().get(queueCurrentIndex);
+                        if (utHome.getType()) {
+                            imgLoader.DisplayImage(utHome.getLocalTrack().getPath(), spImgHome);
+                            spTitleHome.setText(utHome.getLocalTrack().getTitle());
+                        } else {
+                            imgLoader.DisplayImage(utHome.getStreamTrack().getArtworkURL(), spImgHome);
+                            spTitleHome.setText(utHome.getStreamTrack().getTitle());
+                        }
+                    } else {
+                        bottomToolbar.setVisibility(GONE);
+                    }
+
+                    for (int i = 0; i < Math.min(10, recentlyPlayed.getRecentlyPlayed().size()); i++) {
+                        continuePlayingList.add(recentlyPlayed.getRecentlyPlayed().get(i));
+                    }
+
+                    rAdapter = new RecentsListHorizontalAdapter(continuePlayingList, ctx);
+                    recentsRecycler = (RecyclerView) findViewById(R.id.recentsMusicList_home);
+                    recentsRecycler.setNestedScrollingEnabled(false);
+                    LinearLayoutManager mLayoutManager3 = new LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false);
+                    recentsRecycler.setLayoutManager(mLayoutManager3);
+                    recentsRecycler.setItemAnimator(new DefaultItemAnimator());
+                    AlphaInAnimationAdapter alphaAdapter3 = new AlphaInAnimationAdapter(rAdapter);
+                    alphaAdapter3.setFirstOnly(false);
+                    recentsRecycler.setAdapter(alphaAdapter3);
+
+                    // recentsMusicList_home最近的音乐列表的监听
 //                    recentsRecycler.addOnItemTouchListener(new ClickItemTouchListener(recentsRecycler) {
 //                        @Override
 //                        public boolean onClick(RecyclerView parent, View view, final int position, long id) {
@@ -1837,17 +2042,18 @@ public class HomeActivity extends AppCompatActivity
 //
 //                        }
 //                    });
-//
-//                    pAdapter = new PlayListsHorizontalAdapter(allPlaylists.getPlaylists(), ctx);
-//                    playlistsRecycler = (RecyclerView) findViewById(R.id.playlist_home);
-//                    playlistsRecycler.setNestedScrollingEnabled(false);
-//                    LinearLayoutManager mLayoutManager2 = new LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false);
-//                    playlistsRecycler.setLayoutManager(mLayoutManager2);
-//                    playlistsRecycler.setItemAnimator(new DefaultItemAnimator());
-//                    AlphaInAnimationAdapter alphaAdapter2 = new AlphaInAnimationAdapter(pAdapter);
-//                    alphaAdapter2.setFirstOnly(false);
-//                    playlistsRecycler.setAdapter(alphaAdapter2);
-//
+
+                    pAdapter = new PlayListsHorizontalAdapter(allPlaylists.getPlaylists(), ctx);
+                    playlistsRecycler = (RecyclerView) findViewById(R.id.playlist_home);
+                    playlistsRecycler.setNestedScrollingEnabled(false);
+                    LinearLayoutManager mLayoutManager2 = new LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false);
+                    playlistsRecycler.setLayoutManager(mLayoutManager2);
+                    playlistsRecycler.setItemAnimator(new DefaultItemAnimator());
+                    AlphaInAnimationAdapter alphaAdapter2 = new AlphaInAnimationAdapter(pAdapter);
+                    alphaAdapter2.setFirstOnly(false);
+                    playlistsRecycler.setAdapter(alphaAdapter2);
+
+                    // playlist_home 的点击监听
 //                    playlistsRecycler.addOnItemTouchListener(new ClickItemTouchListener(playlistsRecycler) {
 //                        @Override
 //                        public boolean onClick(RecyclerView parent, View view, final int position, long id) {
@@ -1907,59 +2113,60 @@ public class HomeActivity extends AppCompatActivity
 //
 //                        }
 //                    });
-//
-//                    adapter = new LocalTracksHorizontalAdapter(finalLocalSearchResultList, ctx);
-//                    localsongsRecyclerView = (RecyclerView) findViewById(R.id.localMusicList_home);
-//                    LinearLayoutManager mLayoutManager = new LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false);
-//                    localsongsRecyclerView.setLayoutManager(mLayoutManager);
-//                    localsongsRecyclerView.setItemAnimator(new DefaultItemAnimator());
-//                    AlphaInAnimationAdapter alphaAdapter = new AlphaInAnimationAdapter(adapter);
-//                    alphaAdapter.setFirstOnly(false);
-//                    localsongsRecyclerView.setAdapter(alphaAdapter);
-//
-//                    localsongsRecyclerView.addOnItemTouchListener(new ClickItemTouchListener(localsongsRecyclerView) {
-//                        @Override
-//                        public boolean onClick(RecyclerView parent, View view, int position, long id) {
-//                            LocalTrack track = finalLocalSearchResultList.get(position);
-//                            if (queue.getQueue().size() == 0) {
-//                                queueCurrentIndex = 0;
-//                                queue.getQueue().add(new UnifiedTrack(true, track, null));
-//                            } else if (queueCurrentIndex == queue.getQueue().size() - 1) {
-//                                queueCurrentIndex++;
-//                                queue.getQueue().add(new UnifiedTrack(true, track, null));
-//                            } else if (isReloaded) {
-//                                isReloaded = false;
-//                                queueCurrentIndex = queue.getQueue().size();
-//                                queue.getQueue().add(new UnifiedTrack(true, track, null));
-//                            } else {
-//                                queue.getQueue().add(++queueCurrentIndex, new UnifiedTrack(true, track, null));
-//                            }
-//                            localSelectedTrack = track;
-//                            streamSelected = false;
-//                            localSelected = true;
-//                            queueCall = false;
-//                            isReloaded = false;
-//                            onLocalTrackSelected(position);
-//                            return true;
-//                        }
-//
-//                        @Override
-//                        public boolean onLongClick(RecyclerView parent, View view, final int position, long id) {
-//                            CustomLocalBottomSheetDialog localBottomSheetDialog = new CustomLocalBottomSheetDialog();
-//                            localBottomSheetDialog.setPosition(position);
-//                            localBottomSheetDialog.setLocalTrack(finalLocalSearchResultList.get(position));
-//                            localBottomSheetDialog.show(getSupportFragmentManager(), "local_song_bottom_sheet");
-//                            return true;
-//                        }
-//
-//                        @Override
-//                        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-//
-//                        }
-//                    });
-//
-//                    soundcloudRecyclerView = (RecyclerView) findViewById(R.id.trackList_home);
-//
+
+                    adapter = new LocalTracksHorizontalAdapter(finalLocalSearchResultList, ctx);
+                    localsongsRecyclerView = (RecyclerView) findViewById(R.id.localMusicList_home);
+                    LinearLayoutManager mLayoutManager = new LinearLayoutManager(ctx, LinearLayoutManager.HORIZONTAL, false);
+                    localsongsRecyclerView.setLayoutManager(mLayoutManager);
+                    localsongsRecyclerView.setItemAnimator(new DefaultItemAnimator());
+                    AlphaInAnimationAdapter alphaAdapter = new AlphaInAnimationAdapter(adapter);
+                    alphaAdapter.setFirstOnly(false);
+                    localsongsRecyclerView.setAdapter(alphaAdapter);
+
+                    localsongsRecyclerView.addOnItemTouchListener(new ClickItemTouchListener(localsongsRecyclerView) {
+                        @Override
+                        public boolean onClick(RecyclerView parent, View view, int position, long id) {
+                            LocalTrack track = finalLocalSearchResultList.get(position);
+                            if (queue.getQueue().size() == 0) {
+                                queueCurrentIndex = 0;
+                                queue.getQueue().add(new UnifiedTrack(true, track, null));
+                            } else if (queueCurrentIndex == queue.getQueue().size() - 1) {
+                                queueCurrentIndex++;
+                                queue.getQueue().add(new UnifiedTrack(true, track, null));
+                            } else if (isReloaded) {
+                                isReloaded = false;
+                                queueCurrentIndex = queue.getQueue().size();
+                                queue.getQueue().add(new UnifiedTrack(true, track, null));
+                            } else {
+                                queue.getQueue().add(++queueCurrentIndex, new UnifiedTrack(true, track, null));
+                            }
+                            localSelectedTrack = track;
+                            streamSelected = false;
+                            localSelected = true;
+                            queueCall = false;
+                            isReloaded = false;
+                            onLocalTrackSelected(position);
+                            return true;
+                        }
+
+                        @Override
+                        public boolean onLongClick(RecyclerView parent, View view, final int position, long id) {
+                            CustomLocalBottomSheetDialog localBottomSheetDialog = new CustomLocalBottomSheetDialog();
+                            localBottomSheetDialog.setPosition(position);
+                            localBottomSheetDialog.setLocalTrack(finalLocalSearchResultList.get(position));
+                            localBottomSheetDialog.show(getSupportFragmentManager(), "local_song_bottom_sheet");
+                            return true;
+                        }
+
+                        @Override
+                        public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+                        }
+                    });
+
+                    soundcloudRecyclerView = (RecyclerView) findViewById(R.id.trackList_home);
+
+                    // trackList_home 的监听
 //                    soundcloudRecyclerView.addOnItemTouchListener(new ClickItemTouchListener(soundcloudRecyclerView) {
 //                        @Override
 //                        public boolean onClick(RecyclerView parent, View view, int position, long id) {
@@ -2001,45 +2208,45 @@ public class HomeActivity extends AppCompatActivity
 //
 //                        }
 //                    });
-//
-//                    playerContainer = findViewById(R.id.player_frag_container);
-//
-//                    if (finalLocalSearchResultList.size() == 0) {
-//                        localsongsRecyclerView.setVisibility(GONE);
-//                        localNothingText.setVisibility(View.VISIBLE);
-//                    } else {
-//                        localsongsRecyclerView.setVisibility(View.VISIBLE);
-//                        localNothingText.setVisibility(View.INVISIBLE);
-//                    }
-//
-//                    if (recentlyPlayed.getRecentlyPlayed().size() == 0) {
-//                        recentsRecycler.setVisibility(GONE);
-//                        recentsNothingText.setVisibility(View.VISIBLE);
-//                    } else {
-//                        recentsRecycler.setVisibility(View.VISIBLE);
-//                        recentsNothingText.setVisibility(View.INVISIBLE);
-//                    }
-//
-//                    if (streamingTrackList.size() == 0) {
-//                        streamRecyclerContainer.setVisibility(GONE);
-//                        streamNothingText.setVisibility(View.VISIBLE);
-//                    } else {
-//                        streamRecyclerContainer.setVisibility(View.VISIBLE);
-//                        streamNothingText.setVisibility(View.INVISIBLE);
-//                    }
-//
-//                    if (allPlaylists.getPlaylists().size() == 0) {
-//                        playlistsRecycler.setVisibility(GONE);
-//                        playlistNothingText.setVisibility(View.VISIBLE);
-//                    } else {
-//                        playlistsRecycler.setVisibility(View.VISIBLE);
-//                        playlistNothingText.setVisibility(View.INVISIBLE);
-//                    }
-//
-//                }
-//            });
-//        }
-//    }
+
+                    playerContainer = findViewById(R.id.player_frag_container);
+
+                    if (finalLocalSearchResultList.size() == 0) {
+                        localsongsRecyclerView.setVisibility(GONE);
+                        localNothingText.setVisibility(View.VISIBLE);
+                    } else {
+                        localsongsRecyclerView.setVisibility(View.VISIBLE);
+                        localNothingText.setVisibility(View.INVISIBLE);
+                    }
+
+                    if (recentlyPlayed.getRecentlyPlayed().size() == 0) {
+                        recentsRecycler.setVisibility(GONE);
+                        recentsNothingText.setVisibility(View.VISIBLE);
+                    } else {
+                        recentsRecycler.setVisibility(View.VISIBLE);
+                        recentsNothingText.setVisibility(View.INVISIBLE);
+                    }
+
+                    if (streamingTrackList.size() == 0) {
+                        streamRecyclerContainer.setVisibility(GONE);
+                        streamNothingText.setVisibility(View.VISIBLE);
+                    } else {
+                        streamRecyclerContainer.setVisibility(View.VISIBLE);
+                        streamNothingText.setVisibility(View.INVISIBLE);
+                    }
+
+                    if (allPlaylists.getPlaylists().size() == 0) {
+                        playlistsRecycler.setVisibility(GONE);
+                        playlistNothingText.setVisibility(View.VISIBLE);
+                    } else {
+                        playlistsRecycler.setVisibility(View.VISIBLE);
+                        playlistNothingText.setVisibility(View.INVISIBLE);
+                    }
+
+                }
+            });
+        }
+    }
 
     /*
      * Methods for playing selected songs
@@ -2376,7 +2583,8 @@ public class HomeActivity extends AppCompatActivity
         ContentResolver musicResolver = this.getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, MediaStore.MediaColumns.DATE_ADDED + " DESC");
-
+        Log.e(TAG, "musicCursor = " + musicCursor);
+        // E/HomeActivity: musicCursor = android.content.ContentResolver$CursorWrapperInner@a02ae70
         if (musicCursor != null && musicCursor.moveToFirst()) {
             //get columns
             int titleColumn = musicCursor.getColumnIndex
@@ -2392,7 +2600,7 @@ public class HomeActivity extends AppCompatActivity
             int durationColumn = musicCursor.getColumnIndex
                     (MediaStore.Audio.Media.DURATION);
 
-            //add songs to list
+            // add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
@@ -2403,6 +2611,9 @@ public class HomeActivity extends AppCompatActivity
                 if (duration > 10000) {
                     LocalTrack lt = new LocalTrack(thisId, thisTitle, thisArtist, thisAlbum, path, duration);
                     localTrackList.add(lt);
+                    Log.e(TAG, "localTrackList = " + localTrackList);
+                    // 事实证明是有数据的：
+                    // localTrackList = [LocalTrack{id=181794, title='sound', artist='<unknown>', album='actor0', path='/storage/emulated/0/chat/Resource/74/actor0/sound.mp3', duration=17189}, LocalTrack{id=181795, title='From Paris With Love', artist='Koch (BMI)', album='1062', path='/storage/emulated/0/chat/Resource/78/actor0/audio.mp3', duration=18290}]
                     finalLocalSearchResultList.add(lt);
                     if (recentlyAddedTrackList.size() <= 50) {
                         recentlyAddedTrackList.add(lt);
@@ -2418,7 +2629,7 @@ public class HomeActivity extends AppCompatActivity
                             List<LocalTrack> llt = new ArrayList<>();
                             llt.add(lt);
                             Album ab = new Album(thisAlbum, llt);
-                            albums.add(ab);
+                            albums.add(ab); // 添加专辑名字
                         }
                         if (pos != -1) {
                             finalAlbums.get(pos).getAlbumSongs().add(lt);
@@ -2558,6 +2769,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 检查_跟踪track
+     *
      * @param lt
      * @return
      */
@@ -2573,6 +2785,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 获取文件夹
+     *
      * @param folderName
      * @return
      */
@@ -2590,6 +2803,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 检查艺术家
+     *
      * @param artist
      * @return
      */
@@ -2605,6 +2819,7 @@ public class HomeActivity extends AppCompatActivity
 
     /**
      * 检查album
+     *
      * @param album
      * @return
      */
