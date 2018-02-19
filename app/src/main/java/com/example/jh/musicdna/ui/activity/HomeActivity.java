@@ -10,6 +10,8 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.ConnectivityManager;
@@ -141,7 +143,10 @@ public class HomeActivity extends AppCompatActivity
         LocalMusicFragment.OnLocalTrackSelectedListener,
         AlbumFragment.onAlbumClickListener,
         ArtistFragment.onArtistClickListener,
-        RecentlyAddedSongsFragment.OnLocalTrackSelectedListener {
+        RecentlyAddedSongsFragment.OnLocalTrackSelectedListener,
+        ViewAlbumFragment.albumCallbackListener,
+        ViewArtistFragment.artistCallbackListener,
+        PlayerFragment.PlayerFragmentCallbackListener{
 
     private static final String TAG = "HomeActivity";
     // 链表集合
@@ -164,6 +169,9 @@ public class HomeActivity extends AppCompatActivity
     public static boolean localSelected = false;
     public static boolean queueCall = false;
 
+    // Canvas类
+    public static Canvas cacheCanvas;
+
     // 基本控件
     private Dialog progress;
     // TextView集合
@@ -178,6 +186,7 @@ public class HomeActivity extends AppCompatActivity
     public CircleImageView spImgHome;
     public TextView spTitleHome;
     View playerContainer;
+    ImageView navImageView;
 
 
     public static Track selectedTrack;
@@ -274,7 +283,22 @@ public class HomeActivity extends AppCompatActivity
     static boolean isSavePLaylistsRunning = false;
     public static boolean isEqualizerEnabled = false;
     public static boolean isEqualizerReloaded = false;
+    public static boolean hasQueueEnded = false;
+
+
+    // 播放界面： 控制音乐的boolean值
     public static boolean isFavourite = false;
+    public static boolean shuffleEnabled = false;
+    public static boolean repeatEnabled = false;
+    public static boolean repeatOnceEnabled = false;
+    public static boolean isSaveDNAEnabled = false;
+    public static boolean nextControllerClicked = false;
+    public static float seekBarColor;
+
+    static boolean isSaveQueueRunning = false;
+    public boolean isPlayerTransitioning = false;
+    static boolean isSaveRecentsRunning = false;
+    static boolean isSaveFavouritesRunning = false;
 
 
     public static int[] seekbarpos = new int[5];
@@ -321,6 +345,7 @@ public class HomeActivity extends AppCompatActivity
     public static float minAudioStrength = 0.40f;
 
     Call<List<Track>> call;
+    public byte[] mBytes;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -493,6 +518,27 @@ public class HomeActivity extends AppCompatActivity
         streamRecyclerContainer = (RelativeLayout) findViewById(R.id.streamRecyclerContainer);
         playlistRecyclerContainer = (RelativeLayout) findViewById(R.id.playlistRecyclerContainer);
 
+        // navImageView的点击事件
+        View header = navigationView.getHeaderView(0);
+        navImageView = (ImageView) header.findViewById(R.id.nav_image_view);
+        if (navImageView != null) {
+            navImageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //
+                    Toast.makeText(ctx, "待处理；2/19", Toast.LENGTH_SHORT).show();
+//                    PlayerFragment pFrag = getPlayerFragment();
+//                    if (pFrag != null) {
+//                        if (pFrag.mMediaPlayer != null && pFrag.mMediaPlayer.isPlaying()) {
+//                            onBackPressed();
+//                            isPlayerVisible = true;
+////                            hideTabs();
+//                            showPlayer();
+//                        }
+//                    }
+                }
+            });
+        }
 
         connManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         assert connManager != null;
@@ -520,6 +566,7 @@ public class HomeActivity extends AppCompatActivity
         // 启动异步任务,加载保存的数据，暂时注释掉
         new loadSavedData().execute();
     }
+
 
     private void initializeHeaderImages() {
         imgView[0] = (ImageView) findViewById(R.id.home_header_img_1);
@@ -797,7 +844,7 @@ public class HomeActivity extends AppCompatActivity
                     .commitAllowingStateLoss();
         } else if (type.equals("viewArtist") && !isArtistVisible) {
             isArtistVisible = true;
-            android.support.v4.app.FragmentManager fm = getSupportFragmentManager();
+            FragmentManager fm = getSupportFragmentManager();
             ViewArtistFragment newFragment = (ViewArtistFragment) fm.findFragmentByTag("viewArtist");
             if (newFragment == null) {
                 newFragment = new ViewArtistFragment();
@@ -1093,6 +1140,7 @@ public class HomeActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.home, menu);
         searchItem = menu.findItem(R.id.menu_search);
         searchView = (SearchView) searchItem.getActionView();
+        // 对searchView设置querytext的监听
         searchView.setOnQueryTextListener(this);
         return true;
     }
@@ -1231,7 +1279,14 @@ public class HomeActivity extends AppCompatActivity
 
     @Override
     public boolean onQueryTextSubmit(String query) {
-        return false;
+        CommonUtils.hideKeyboard(this);
+        updateLocalList(query.trim());
+        updateStreamingList(query.trim());
+        // 暂时注释掉 2/19
+//        updateAlbumList(query.trim());
+//        updateArtistList(query.trim());
+//        updateRecentlyAddedLocalList(query.trim());
+        return true;
     }
 
     @Override
@@ -1255,7 +1310,7 @@ public class HomeActivity extends AppCompatActivity
             mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
             if ((settings.isStreamOnlyOnWifiEnabled() && mWifi.isConnected()) || (!settings.isStreamOnlyOnWifiEnabled())) {
 
-                // 启动新的线程
+                // 启动CancelCall的线程
                 new Thread(new CancelCall()).start();
 
                 /*Update the Streaming List*/
@@ -1269,6 +1324,7 @@ public class HomeActivity extends AppCompatActivity
                             .addConverterFactory(GsonConverterFactory.create())
                             .build();
                     StreamService ss = client.create(StreamService.class);
+                    // 获取call对象
                     call = ss.getTracks(query, 75);
                     call.enqueue(new Callback<List<Track>>() {
 
@@ -1639,7 +1695,10 @@ public class HomeActivity extends AppCompatActivity
         dialog.show();
     }
 
-
+    /**
+     * 2/19 播放界面今天完成，可以播放打开的音乐！
+     * @param position
+     */
     @Override
     public void onLocalTrackSelected(int position) {
         Log.e(TAG, "onLocalTrackSelected"); //  E/HomeActivity: onLocalTrackSelected
@@ -1647,126 +1706,211 @@ public class HomeActivity extends AppCompatActivity
         HideBottomFakeToolbar();
 
         // 2/19 关于打开播放界面的方法要认真分析处理在整理下！
-//        if (!queueCall) {
-//            // 隐藏键盘
-//            CommonUtils.hideKeyboard(this);
-//
-//            searchView.setQuery("", true);
-//            searchView.setIconified(true);
-//            new Thread(new CancelCall()).start();
-//
-////            hideTabs();
-//            isPlayerVisible = true;
-//
-//            PlayerFragment frag = playerFragment;
-//            FragmentManager fm = getSupportFragmentManager();
-//            PlayerFragment newFragment = new PlayerFragment();
-//            if (frag == null) {
-//                playerFragment = newFragment;
-//                int flag = 0;
-//                for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
-//                    UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
-//                    if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
-//                        flag = 1;
-//                        isFavourite = true;
-//                        break;
-//                    }
-//                }
-//                if (flag == 0) {
-//                    isFavourite = false;
-//                }
-//
-//                playerFragment.localIsPlaying = true;
-//                playerFragment.localTrack = localSelectedTrack;
-//                fm.beginTransaction()
-//                        .setCustomAnimations(R.anim.slide_up,
-//                                R.anim.slide_down,
-//                                R.anim.slide_up,
-//                                R.anim.slide_down)
-//                        .add(R.id.player_frag_container, newFragment, "player")
-//                        .show(newFragment)
-//                        .commitAllowingStateLoss();
-//            } else {
-//                if (playerFragment.localTrack != null && playerFragment.localIsPlaying && localSelectedTrack.getTitle() == playerFragment.localTrack.getTitle()) {
-//
-//                } else {
-//                    int flag = 0;
-//                    for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
-//                        UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
-//                        if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
-//                            flag = 1;
-//                            isFavourite = true;
-//                            break;
-//                        }
-//                    }
-//                    if (flag == 0) {
-//                        isFavourite = false;
-//                    }
-//                    playerFragment.localIsPlaying = true;
-//                    playerFragment.localTrack = localSelectedTrack;
-//                    frag.refresh();
-//                }
-//            }
-//
-//            if (!isQueueVisible)
-//                showPlayer();
-//
-//        } else {
-//            PlayerFragment frag = playerFragment;
-//            playerFragment.localIsPlaying = true;
-//            playerFragment.localTrack = localSelectedTrack;
-//
-//            int flag = 0;
-//            for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
-//                UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
-//                if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
-//                    flag = 1;
-//                    isFavourite = true;
-//                    break;
-//                }
-//            }
-//            if (flag == 0) {
-//                isFavourite = false;
-//            }
-//            if (frag != null)
-//                frag.refresh();
-//        }
-//
-//        if (playerFragment != null && playerFragment.snappyRecyclerView != null) {
-//            playerFragment.snappyRecyclerView.getAdapter().notifyDataSetChanged();
-//            playerFragment.snappyRecyclerView.setTransparency();
-//        }
-//
-//        QueueFragment qFrag = (QueueFragment) fragMan.findFragmentByTag("queue");
-//        if (qFrag != null) {
-//            qFrag.updateQueueAdapter();
-//        }
-//
-//        UnifiedTrack track = new UnifiedTrack(true, playerFragment.localTrack, null);
-//        for (int i = 0; i < recentlyPlayed.getRecentlyPlayed().size(); i++) {
-//            if (recentlyPlayed.getRecentlyPlayed().get(i).getType() && recentlyPlayed.getRecentlyPlayed().get(i).getLocalTrack().getTitle().equals(track.getLocalTrack().getTitle())) {
-//                recentlyPlayed.getRecentlyPlayed().remove(i);
-////                rAdapter.notifyItemRemoved(i);
-//                break;
-//            }
-//        }
-//        recentlyPlayed.getRecentlyPlayed().add(0, track);
-//        if (recentlyPlayed.getRecentlyPlayed().size() == 51) {
-//            recentlyPlayed.getRecentlyPlayed().remove(50);
-//        }
-//        recentsRecycler.setVisibility(View.VISIBLE);
-//        recentsNothingText.setVisibility(View.INVISIBLE);
-//        continuePlayingList.clear();
-//        for (int i = 0; i < Math.min(10, recentlyPlayed.getRecentlyPlayed().size()); i++) {
-//            continuePlayingList.add(recentlyPlayed.getRecentlyPlayed().get(i));
-//        }
-//        rAdapter.notifyDataSetChanged();
-//        refreshHeaderImages();
-//
-//        RecentsFragment rFrag = (RecentsFragment) fragMan.findFragmentByTag("recent");
-//        if (rFrag != null && rFrag.rtAdpater != null) {
-//            rFrag.rtAdpater.notifyDataSetChanged();
-//        }
+        if (!queueCall) {
+            // 隐藏键盘
+            CommonUtils.hideKeyboard(this);
+
+            searchView.setQuery("", true);
+            searchView.setIconified(true);
+            new Thread(new CancelCall()).start();
+
+//            hideTabs();
+            isPlayerVisible = true;
+
+            PlayerFragment frag = playerFragment;
+            FragmentManager fm = getSupportFragmentManager();
+            PlayerFragment newFragment = new PlayerFragment();
+            if (frag == null) {
+                playerFragment = newFragment;
+                int flag = 0;
+                for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
+                    UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
+                    if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
+                        flag = 1;
+                        isFavourite = true;
+                        break;
+                    }
+                }
+                if (flag == 0) {
+                    isFavourite = false;
+                }
+
+                playerFragment.localIsPlaying = true;
+                playerFragment.localTrack = localSelectedTrack;
+                fm.beginTransaction()
+                        .setCustomAnimations(R.anim.slide_up,
+                                R.anim.slide_down,
+                                R.anim.slide_up,
+                                R.anim.slide_down)
+                        .add(R.id.player_frag_container, newFragment, "player")
+                        .show(newFragment)
+                        .commitAllowingStateLoss();
+            } else {
+                if (playerFragment.localTrack != null && playerFragment.localIsPlaying && localSelectedTrack.getTitle() == playerFragment.localTrack.getTitle()) {
+
+                } else {
+                    int flag = 0;
+                    for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
+                        UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
+                        if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
+                            flag = 1;
+                            isFavourite = true;
+                            break;
+                        }
+                    }
+                    if (flag == 0) {
+                        isFavourite = false;
+                    }
+                    playerFragment.localIsPlaying = true;
+                    playerFragment.localTrack = localSelectedTrack;
+                    frag.refresh();
+                }
+            }
+
+            if (!isQueueVisible)
+                showPlayer();
+
+        } else {
+            PlayerFragment frag = playerFragment;
+            playerFragment.localIsPlaying = true;
+            playerFragment.localTrack = localSelectedTrack;
+
+            int flag = 0;
+            for (int i = 0; i < favouriteTracks.getFavourite().size(); i++) {
+                UnifiedTrack ut = favouriteTracks.getFavourite().get(i);
+                if (ut.getType() && ut.getLocalTrack().getTitle().equals(localSelectedTrack.getTitle())) {
+                    flag = 1;
+                    isFavourite = true;
+                    break;
+                }
+            }
+            if (flag == 0) {
+                isFavourite = false;
+            }
+            if (frag != null)
+                frag.refresh();
+        }
+
+        if (playerFragment != null && playerFragment.snappyRecyclerView != null) {
+            playerFragment.snappyRecyclerView.getAdapter().notifyDataSetChanged();
+            playerFragment.snappyRecyclerView.setTransparency();
+        }
+
+        QueueFragment qFrag = (QueueFragment) fragmentManager.findFragmentByTag("queue");
+        if (qFrag != null) {
+            qFrag.updateQueueAdapter();
+        }
+
+        UnifiedTrack track = new UnifiedTrack(true, playerFragment.localTrack, null);
+        for (int i = 0; i < recentlyPlayed.getRecentlyPlayed().size(); i++) {
+            if (recentlyPlayed.getRecentlyPlayed().get(i).getType() && recentlyPlayed.getRecentlyPlayed().get(i).getLocalTrack().getTitle().equals(track.getLocalTrack().getTitle())) {
+                recentlyPlayed.getRecentlyPlayed().remove(i);
+//                rAdapter.notifyItemRemoved(i);
+                break;
+            }
+        }
+        recentlyPlayed.getRecentlyPlayed().add(0, track);
+        if (recentlyPlayed.getRecentlyPlayed().size() == 51) {
+            recentlyPlayed.getRecentlyPlayed().remove(50);
+        }
+        recentsRecycler.setVisibility(View.VISIBLE);
+        recentsNothingText.setVisibility(View.INVISIBLE);
+        continuePlayingList.clear();
+        for (int i = 0; i < Math.min(10, recentlyPlayed.getRecentlyPlayed().size()); i++) {
+            continuePlayingList.add(recentlyPlayed.getRecentlyPlayed().get(i));
+        }
+        rAdapter.notifyDataSetChanged();
+        refreshHeaderImages();
+
+        RecentsFragment rFrag = (RecentsFragment) fragmentManager.findFragmentByTag("recent");
+        if (rFrag != null && rFrag.rtAdpater != null) {
+            rFrag.rtAdpater.notifyDataSetChanged();
+        }
+
+    }
+
+    /**
+     * 显示player
+     */
+    public void showPlayer() {
+        if (Build.VERSION.SDK_INT >= 21) {
+            Window window = ((Activity) (ctx)).getWindow();
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(Color.parseColor("#000000"));
+        }
+
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED);
+        searchView.setQuery("", false);
+        searchView.setIconified(true);
+        new Thread(new CancelCall()).start();
+
+        isPlayerVisible = true;
+        isEqualizerVisible = false;
+        isQueueVisible = false;
+
+        playerContainer.setVisibility(View.VISIBLE);
+        if (playerFragment != null && playerFragment.mVisualizerView != null)
+            playerFragment.mVisualizerView.setVisibility(View.INVISIBLE);
+
+        if (playerFragment != null && playerFragment.player_controller != null) {
+            playerFragment.player_controller.setAlpha(1.0f);
+            playerFragment.player_controller.animate()
+                    .setDuration(300)
+                    .alpha(0.0f);
+        }
+
+        if (playerFragment != null && playerFragment.cpb != null) {
+            playerFragment.cpb.animate()
+                    .alpha(0.0f);
+        }
+        if (playerFragment != null && playerFragment.smallPlayer != null) {
+            playerFragment.smallPlayer.animate()
+                    .alpha(0.0f);
+        }
+
+        if (playerFragment != null && playerFragment.spToolbar != null) {
+            playerFragment.spToolbar.setVisibility(View.VISIBLE);
+            playerFragment.spToolbar.animate().alpha(1.0f);
+        }
+
+        isPlayerTransitioning = true;
+
+        playerContainer.animate()
+                .setDuration(300)
+                .translationY(0)
+                .withEndAction(new Runnable() {
+                    @Override
+                    public void run() {
+                        isPlayerTransitioning = false;
+                        if (playerFragment != null && playerFragment.snappyRecyclerView != null) {
+                            playerFragment.snappyRecyclerView.setTransparency();
+                        }
+                    }
+                });
+
+
+        if (playerFragment != null && playerFragment.snappyRecyclerView != null) {
+            playerFragment.snappyRecyclerView.setVisibility(View.VISIBLE);
+            playerFragment.snappyRecyclerView.animate()
+                    .alpha(1.0f)
+                    .setDuration(300);
+        }
+
+        final Handler handler2 = new Handler();
+        handler2.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (playerFragment != null && playerFragment.mVisualizerView != null){
+                    if (playerFragment.isLyricsVisisble) {
+                        playerFragment.mVisualizerView.setVisibility(GONE);
+                        playerFragment.lyricsContainer.setVisibility(View.VISIBLE);
+                    } else {
+                        playerFragment.mVisualizerView.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+        }, 400);
 
     }
 
@@ -1810,6 +1954,203 @@ public class HomeActivity extends AppCompatActivity
 //                onTrackSelected(position);
             }
         }
+    }
+
+    @Override
+    public void onAlbumSongClick() {
+
+    }
+
+    @Override
+    public void onAlbumPlayAll() {
+
+    }
+
+    @Override
+    public void addAlbumToQueue() {
+
+    }
+
+    @Override
+    public void onArtistSongClick() {
+
+    }
+
+    @Override
+    public void onArtistPlayAll() {
+
+    }
+
+    @Override
+    public void addArtistToQueue() {
+
+    }
+
+    /**
+     * 更新VisualizerRecycler
+     */
+    public void updateVisualizerRecycler() {
+        if (playerFragment != null && playerFragment.snappyRecyclerView != null) {
+            playerFragment.snappyRecyclerView.getAdapter().notifyDataSetChanged();
+            playerFragment.snappyRecyclerView.scrollToPosition(queueCurrentIndex);
+            playerFragment.snappyRecyclerView.setTransparency();
+        }
+    }
+
+    /*
+    * Methods to control the transitions of the player fragment
+    * hidePlayer() / showPlayer()  -> the vertical animation to hide/show the visualizer
+    * hidePlayer2() / showPlayer2()  -> the horizontal animation to hide/show the equalizer
+    * hidePlayer3() / showPlayer3()  -> the horizontal animation to hide/show the queue
+    *
+    * 隐藏player
+    */
+    public void hidePlayer() {
+
+        if (playerFragment != null && playerFragment.mVisualizerView != null) {
+            playerFragment.mVisualizerView.setVisibility(View.GONE);
+            playerFragment.lyricsContainer.setVisibility(View.GONE);
+        }
+
+        drawer.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED);
+
+        if (Build.VERSION.SDK_INT >= 21) {
+            Window window = ((Activity) (ctx)).getWindow();
+            window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+            window.setStatusBarColor(CommonUtils.getDarkColor(themeColor));
+        }
+
+        isPlayerVisible = false;
+
+        if (playerFragment != null && playerFragment.cpb != null) {
+            playerFragment.cpb.setAlpha(0.0f);
+            playerFragment.cpb.setVisibility(View.VISIBLE);
+            playerFragment.cpb.animate()
+                    .alpha(1.0f);
+        }
+        if (playerFragment != null && playerFragment.smallPlayer != null) {
+            playerFragment.smallPlayer.setAlpha(0.0f);
+            playerFragment.smallPlayer.setVisibility(View.VISIBLE);
+            playerFragment.smallPlayer.animate()
+                    .alpha(1.0f);
+        }
+
+        if (playerFragment != null && playerFragment.spToolbar != null) {
+            playerFragment.spToolbar.animate()
+                    .alpha(0.0f)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            playerFragment.spToolbar.setVisibility(GONE);
+                        }
+                    });
+        }
+
+        playerContainer.setVisibility(View.VISIBLE);
+        if (playerFragment != null) {
+            playerContainer.animate()
+                    .translationY(playerContainer.getHeight() - playerFragment.smallPlayer.getHeight())
+                    .setDuration(300);
+        } else {
+            playerContainer.animate()
+                    .translationY(playerContainer.getHeight() - playerFragment.smallPlayer.getHeight())
+                    .setDuration(300)
+                    .setStartDelay(500);
+        }
+
+        if (playerFragment != null) {
+
+            playerFragment.player_controller.setAlpha(0.0f);
+            playerFragment.player_controller.setImageDrawable(playerFragment.mainTrackController.getDrawable());
+
+            playerFragment.player_controller.animate()
+                    .alpha(1.0f);
+
+            playerFragment.snappyRecyclerView.animate()
+                    .alpha(0.0f)
+                    .withEndAction(new Runnable() {
+                        @Override
+                        public void run() {
+                            playerFragment.snappyRecyclerView.setVisibility(GONE);
+                        }
+                    });
+        }
+    }
+
+   /*
+     * Methods and classes for updating visualizer.
+     * MyAsyncTask -> AsyncTask to update visualiser in background thread.
+     * updatePoints() -> Actual method to render the DNA.
+     */
+
+    public void updateVisualizer(byte[] bytes) {
+        mBytes = bytes;
+        try {
+            new MyAsyncTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onComplete() {
+
+    }
+
+    @Override
+    public void onPreviousTrack() {
+
+    }
+
+    @Override
+    public void onEqualizerClicked() {
+
+    }
+
+    @Override
+    public void onQueueClicked() {
+
+    }
+
+    @Override
+    public void onPrepared() {
+
+    }
+
+    @Override
+    public void onFullScreen() {
+
+    }
+
+    @Override
+    public void onSettingsClicked() {
+
+    }
+
+    @Override
+    public void onAddedtoFavfromPlayer() {
+
+    }
+
+    @Override
+    public void onShuffleEnabled() {
+
+    }
+
+    @Override
+    public void onShuffleDisabled() {
+
+    }
+
+    @Override
+    public void onSmallPlayerTouched() {
+
+    }
+
+    @Override
+    public void addCurrentSongtoPlaylist(UnifiedTrack ut) {
+
     }
 
     private class CancelCall implements Runnable {
@@ -2848,4 +3189,107 @@ public class HomeActivity extends AppCompatActivity
             return null;
         }
     }
+
+    /**
+     * 保存到队列的异步任务
+     */
+    public static class SaveQueue extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            if (!isSaveQueueRunning) {
+                isSaveQueueRunning = true;
+                try {
+                    String json3 = gson.toJson(queue);
+                    prefsEditor.putString("queue", json3);
+                    String json6 = gson.toJson(queueCurrentIndex);
+                    prefsEditor.putString("queueCurrentIndex", json6);
+                } catch (Exception e) {
+
+                }
+                isSaveQueueRunning = false;
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 保存最近的异步任务
+     */
+    public static class SaveRecents extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            if (!isSaveRecentsRunning) {
+                isSaveRecentsRunning = true;
+                try {
+                    String json4 = gson.toJson(recentlyPlayed);
+                    prefsEditor.putString("recentlyPlayed", json4);
+                } catch (Exception e) {
+
+                }
+                isSaveRecentsRunning = false;
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 保存喜欢的异步任务
+     */
+    public static class SaveFavourites extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            if (!isSaveFavouritesRunning) {
+                isSaveFavouritesRunning = true;
+                try {
+                    String json5 = gson.toJson(favouriteTracks);
+                    prefsEditor.putString("favouriteTracks", json5);
+                } catch (Exception e) {
+
+                }
+                isSaveFavouritesRunning = false;
+            }
+            return null;
+        }
+    }
+
+    /**
+     * 我的异步任务
+     */
+    public class MyAsyncTask extends AsyncTask<Void, Void, Void> {
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            // 2/19 暂时注释掉
+//            updatePoints();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            main.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    playerFragment.mVisualizerView.updateVisualizer(mBytes);
+                    if (playerFragment.mVisualizerView.bmp != null) {
+                        if (navImageView != null) {
+                            try {
+                                Bitmap croppedBmp = Bitmap.createBitmap(playerFragment.mVisualizerView.bmp, 0, (int) (75 * ratio), screen_width, screen_width);
+                                navImageView.setImageBitmap(croppedBmp);
+                            } catch (Exception | OutOfMemoryError e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+
+
 }

@@ -16,3 +16,7 @@
 2.关于图片缓存的可以参考本代码进行深度学习整理；
 3.com.squareup.leakcanary-android-no-op的库的学习；
 ```
+- 2/19
+```
+1.歌词类：Lyrics Parcelable序列化,许久都不熟悉，要去整理的！
+```

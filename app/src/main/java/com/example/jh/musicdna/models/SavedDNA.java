@@ -3,6 +3,8 @@ package com.example.jh.musicdna.models;
 /**
  * Created by jinhui on 2018/2/15.
  * Email:1004260403@qq.com
+ *
+ * 保存dna的model
  */
 
 public class SavedDNA {

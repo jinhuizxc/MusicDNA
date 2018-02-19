@@ -202,7 +202,7 @@
             android:src="@drawable/menu_overflow" />
     </RelativeLayout>
 
-    <com.sdsmdg.harjot.MusicDNA.visualizers.VisualizerView
+    <com.example.jh.musicdna.view.visualizers.VisualizerView
         android:id="@+id/myvisualizerview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

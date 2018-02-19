@@ -21,6 +21,8 @@ import com.squareup.leakcanary.RefWatcher;
 /**
  * Created by jinhui on 2018/2/16.
  * Email:1004260403@qq.com
+ *
+ * 艺术家页
  */
 
 public class ArtistFragment extends Fragment {

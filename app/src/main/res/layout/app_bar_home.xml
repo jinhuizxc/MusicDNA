@@ -544,6 +544,7 @@
         android:layout_height="match_parent"
         android:translationZ="10dp" />
 
+    <!--底部的播放歌曲显示布局-->
     <FrameLayout
         android:id="@+id/bottomMargin"
         android:layout_width="match_parent"

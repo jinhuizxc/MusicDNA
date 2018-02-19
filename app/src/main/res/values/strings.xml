@@ -50,5 +50,8 @@
     <string name="Albums">专辑</string>
     <string name="Artists">艺术家</string>
     <string name="Recent">最近</string>
+    <string name="QUEUE">歌曲队列</string>
+    <string name="CLEAR">清空</string>
+    <string name="Full_Screen">全屏</string>
 
 </resources>
