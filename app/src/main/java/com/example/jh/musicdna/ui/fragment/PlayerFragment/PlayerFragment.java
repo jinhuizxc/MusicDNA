@@ -38,6 +38,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.jh.musicdna.Config;
+import com.example.jh.musicdna.MusicDNAApplication;
 import com.example.jh.musicdna.R;
 import com.example.jh.musicdna.clickitemtouchlistener.ClickItemTouchListener;
 import com.example.jh.musicdna.imageloader.ImageLoader;
@@ -54,6 +55,7 @@ import com.example.jh.musicdna.view.snappyrecyclerview.SnappyRecyclerView;
 import com.example.jh.musicdna.view.visualizers.VisualizerView;
 import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.github.amlcurran.showcaseview.targets.ViewTarget;
+import com.squareup.leakcanary.RefWatcher;
 import com.squareup.picasso.Picasso;
 import com.wang.avi.AVLoadingIndicatorView;
 
@@ -70,10 +72,13 @@ import java.util.TimerTask;
  * 播放界面的布局，好好体会方法的处理，
  * 尤其是音频播放这块做下总结：
  *
+ * 2/20 全力解决本界面所有的功能方法；
+ *
  */
 
 public class PlayerFragment extends Fragment implements Lyrics.Callback {
 
+    private static final String TAG = "PlayerFragment";
     public SnappyRecyclerView snappyRecyclerView;
     CustomAdapter customAdapter;
 
@@ -183,16 +188,21 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                     + " must implement OnHeadlineSelectedListener");
         }
 
+        // 初始化播放对象
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        // mediaplayer设置setOnPreparedListener
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 currentLyrics = null;
+                // 如果下载歌词线程没有关闭，停止
                 if (downloadThread != null) {
                     downloadThread.interrupt();
                 }
+                // 如果isLyricsVisisble的值为true将其置为false，歌词置为"".
                 if (isLyricsVisisble) {
+                    Log.e(TAG, "isLyricsVisisble的值 = " + isLyricsVisisble);
                     isLyricsVisisble = false;
                     lyricsContent.setText("");
                     lyricsContainer.setVisibility(View.GONE);
@@ -211,8 +221,6 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                     player_controller.setImageResource(R.drawable.ic_pause_white_48dp);
                 }
                 togglePlayPause();
-                togglePlayPause();
-                togglePlayPause();
                 bufferingIndicator.setVisibility(View.GONE);
                 mainTrackController.setVisibility(View.VISIBLE);
                 equalizerIcon.setVisibility(View.VISIBLE);
@@ -220,6 +228,7 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                 snappyRecyclerView.setCurrentPosition(HomeActivity.queueCurrentIndex);
                 snappyRecyclerView.setTransparency();
 
+                // SaveQueue/SaveRecents的异步任务进行
                 new HomeActivity.SaveQueue().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 new HomeActivity.SaveRecents().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
@@ -232,6 +241,7 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             public void onCompletion(MediaPlayer mp) {
                 completed = true;
                 if (homeActivity.isPlayerVisible) {
+                    Log.e(TAG, "onCompletion 播放完成");  // E/PlayerFragment: onCompletion 播放完成
                     mainTrackController.setImageResource(R.drawable.ic_replay_white_48dp);
                     player_controller.setImageResource(R.drawable.ic_replay_white_48dp);
                     isReplayIconVisible = true;
@@ -240,6 +250,7 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                     mainTrackController.setImageResource(R.drawable.ic_replay_white_48dp);
                     isReplayIconVisible = true;
                 }
+                // SaveDNA的异步任务进行
                 new SaveDNA().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         });
@@ -290,22 +301,6 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
         super.onCreate(savedInstanceState);
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (snappyRecyclerView.getCurrentPosition() != HomeActivity.queueCurrentIndex) {
-            snappyRecyclerView.scrollToPosition(HomeActivity.queueCurrentIndex);
-            snappyRecyclerView.setCurrentPosition(HomeActivity.queueCurrentIndex);
-            customAdapter.notifyDataSetChanged();
-        }
-        snappyRecyclerView.setTransparency();
-    }
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -320,71 +315,49 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
 
         imgLoader = new ImageLoader(getContext());
 
+        //smallPlayer
         smallPlayer = (RelativeLayout) view.findViewById(R.id.smallPlayer);
-
+        smallPlayer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mCallback.onSmallPlayerTouched();
+            }
+        });
+        // snappyRecyclerView 界面左右滑动切换音乐？
         snappyRecyclerView = (SnappyRecyclerView) view.findViewById(R.id.visualizer_recycler);
 
-        bufferingIndicator = (AVLoadingIndicatorView) view.findViewById(R.id.bufferingIndicator);
         currTime = (TextView) view.findViewById(R.id.currTime);
         totalTime = (TextView) view.findViewById(R.id.totalTime);
 
+        // 循环播放/单曲播放
         repeatController = (ImageView) view.findViewById(R.id.repeat_controller);
-        shuffleController = (ImageView) view.findViewById(R.id.shuffle_controller);
-
-        spToolbar = (RelativeLayout) view.findViewById(R.id.smallPlayer_AB);
-
-        overflowMenuAB = (ImageView) view.findViewById(R.id.menuIcon);
-
-        lyricsContainer = (RelativeLayout) view.findViewById(R.id.lyrics_container);
-        lyricsIcon = (ImageView) view.findViewById(R.id.lyrics_icon);
-        lyricsContent = (TextView) view.findViewById(R.id.lyrics_content);
-        lyricsLoadingIndicator = (AVLoadingIndicatorView) view.findViewById(R.id.lyrics_loading_indicator);
-        lyricsStatus = (TextView) view.findViewById(R.id.lyrics_status_text);
-
-        // 搜索歌词的方法
-        lyricsIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!isLyricsVisisble) {
-                    lyricsIcon.setAlpha(1.0f);
-                    mVisualizerView.setVisibility(View.GONE);
-                    lyricsContainer.setVisibility(View.VISIBLE);
-                    lyricsLoadingIndicator.setVisibility(View.VISIBLE);
-                    lyricsStatus.setText("Searching Lyrics");
-                    lyricsStatus.setVisibility(View.VISIBLE);
-                    if (currentLyrics == null) {
-                        // 本fragment实现回调接口，不在报错
-                        downloadThread = new DownloadThread(PlayerFragment.this, false, selected_track_artist.getText().toString(), selected_track_title.getText().toString());
-                        downloadThread.start();
-                    } else {
-                        onLyricsDownloaded(currentLyrics);
-                    }
-                } else {
-                    lyricsIcon.setAlpha(0.5f);
-                    lyricsContent.setText("");
-                    lyricsContainer.setVisibility(View.GONE);
-                    mVisualizerView.setVisibility(View.VISIBLE);
-                }
-                isLyricsVisisble = !isLyricsVisisble;
-            }
-        });
-
-        spImgAB = (ImageView) view.findViewById(R.id.selected_track_image_sp_AB);
-        spImgAB.setOnClickListener(new View.OnClickListener() {
+        // 重复播放
+        if (homeActivity.repeatEnabled) {
+            repeatController.setImageResource(R.drawable.ic_repeat_filled);
+        } else if (homeActivity.repeatOnceEnabled) {
+            repeatController.setImageResource(R.drawable.ic_repeat_once);
+        } else {
+            repeatController.setImageResource(R.drawable.ic_repeat_alpha);
+        }
+        repeatController.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // 暂时注释掉
-                if (!homeActivity.isPlayerTransitioning && smallPlayer != null) {
-                    homeActivity.hidePlayer();
-                    homeActivity.isPlayerVisible = false;
+                if (homeActivity.repeatOnceEnabled) {
+                    homeActivity.repeatOnceEnabled = false;
+                    repeatController.setImageResource(R.drawable.ic_repeat_alpha);
+                } else if (homeActivity.repeatEnabled) {
+                    homeActivity.repeatEnabled = false;
+                    homeActivity.repeatOnceEnabled = true;
+                    repeatController.setImageResource(R.drawable.ic_repeat_once);
+                } else {
+                    homeActivity.repeatEnabled = true;
+                    repeatController.setImageResource(R.drawable.ic_repeat_filled);
                 }
             }
         });
 
-        spTitleAB = (TextView) view.findViewById(R.id.selected_track_title_sp_AB);
-        spTitleAB.setSelected(true);
-        spArtistAB = (TextView) view.findViewById(R.id.selected_track_artist_sp_AB);
-
+        // 随机播放
+        shuffleController = (ImageView) view.findViewById(R.id.shuffle_controller);
         // 随机播放选择
         if (homeActivity.shuffleEnabled) {
             shuffleController.setImageResource(R.drawable.ic_shuffle_filled);
@@ -416,30 +389,102 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             }
         });
 
-        // 重复播放
-        if (homeActivity.repeatEnabled) {
-            repeatController.setImageResource(R.drawable.ic_repeat_filled);
-        } else if (homeActivity.repeatOnceEnabled) {
-            repeatController.setImageResource(R.drawable.ic_repeat_once);
-        } else {
-            repeatController.setImageResource(R.drawable.ic_repeat_alpha);
-        }
-        repeatController.setOnClickListener(new View.OnClickListener() {
+        spToolbar = (RelativeLayout) view.findViewById(R.id.smallPlayer_AB);
+
+        // toolbar的菜单按钮
+        overflowMenuAB = (ImageView) view.findViewById(R.id.menuIcon);
+        overflowMenuAB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (homeActivity.repeatOnceEnabled) {
-                    homeActivity.repeatOnceEnabled = false;
-                    repeatController.setImageResource(R.drawable.ic_repeat_alpha);
-                } else if (homeActivity.repeatEnabled) {
-                    homeActivity.repeatEnabled = false;
-                    homeActivity.repeatOnceEnabled = true;
-                    repeatController.setImageResource(R.drawable.ic_repeat_once);
+                // PopupMenu  动态生成布局
+                PopupMenu popMenu = new PopupMenu(getContext(), overflowMenuAB);
+                popMenu.getMenuInflater().inflate(R.menu.player_overflow_menu, popMenu.getMenu());
+
+                popMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        if (item.getTitle().equals(getString(R.string.Full_Screen))) {
+                            if (homeActivity.isFullScreenEnabled) {
+                                homeActivity.isFullScreenEnabled = false;
+                                bottomContainer.setVisibility(View.VISIBLE);
+                                seekBarContainer.setVisibility(View.VISIBLE);
+                                toggleContainer.setVisibility(View.VISIBLE);
+                                spToolbar.setVisibility(View.VISIBLE);
+                                mCallback.onFullScreen();
+                            } else {
+                                homeActivity.isFullScreenEnabled = true;
+                                bottomContainer.setVisibility(View.GONE);
+                                seekBarContainer.setVisibility(View.GONE);
+                                toggleContainer.setVisibility(View.GONE);
+                                spToolbar.setVisibility(View.INVISIBLE);
+                                mCallback.onFullScreen();
+                            }
+                        } else if (item.getTitle().equals(getString(R.string.Settings))) {
+                            mCallback.onSettingsClicked();
+                        } else if (item.getTitle().equals(getString(R.string.Add_to_Playlist))) {
+                            UnifiedTrack ut = HomeActivity.queue.getQueue().get(HomeActivity.queueCurrentIndex);
+                            mCallback.addCurrentSongtoPlaylist(ut);
+                        }
+                        return true;
+                    }
+                });
+
+                popMenu.show();
+            }
+        });
+
+        // 歌词显示
+        lyricsContainer = (RelativeLayout) view.findViewById(R.id.lyrics_container);
+        lyricsIcon = (ImageView) view.findViewById(R.id.lyrics_icon);
+        lyricsContent = (TextView) view.findViewById(R.id.lyrics_content);
+        lyricsLoadingIndicator = (AVLoadingIndicatorView) view.findViewById(R.id.lyrics_loading_indicator);
+        lyricsStatus = (TextView) view.findViewById(R.id.lyrics_status_text);
+
+        // 搜索歌词的方法
+        lyricsIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (!isLyricsVisisble) {
+                    lyricsIcon.setAlpha(1.0f);
+                    mVisualizerView.setVisibility(View.GONE);
+                    lyricsContainer.setVisibility(View.VISIBLE);
+                    lyricsLoadingIndicator.setVisibility(View.VISIBLE);
+                    lyricsStatus.setText(getString(R.string.Searching_Lyrics));
+                    lyricsStatus.setVisibility(View.VISIBLE);
+                    if (currentLyrics == null) {
+                        // 本fragment实现回调接口，不在报错
+                        downloadThread = new DownloadThread(PlayerFragment.this, false, selected_track_artist.getText().toString(), selected_track_title.getText().toString());
+                        downloadThread.start();
+                    } else {
+                        onLyricsDownloaded(currentLyrics);
+                    }
                 } else {
-                    homeActivity.repeatEnabled = true;
-                    repeatController.setImageResource(R.drawable.ic_repeat_filled);
+                    lyricsIcon.setAlpha(0.5f);
+                    lyricsContent.setText("");
+                    lyricsContainer.setVisibility(View.GONE);
+                    mVisualizerView.setVisibility(View.VISIBLE);
+                }
+                isLyricsVisisble = !isLyricsVisisble;
+            }
+        });
+
+        // 退出本fragment，返回主界面
+        spImgAB = (ImageView) view.findViewById(R.id.selected_track_image_sp_AB);
+        spImgAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!homeActivity.isPlayerTransitioning && smallPlayer != null) {
+                    // 隐藏player界面
+                    homeActivity.hidePlayer();
+                    homeActivity.isPlayerVisible = false;
                 }
             }
         });
+
+        // 歌曲/艺术家
+        spTitleAB = (TextView) view.findViewById(R.id.selected_track_title_sp_AB);
+        spTitleAB.setSelected(true);
+        spArtistAB = (TextView) view.findViewById(R.id.selected_track_artist_sp_AB);
 
         // 均衡器图片
         equalizerIcon = (ImageView) view.findViewById(R.id.equalizer_icon);
@@ -465,36 +510,58 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                 if (homeActivity.isSaveDNAEnabled) {
                     homeActivity.isSaveDNAEnabled = false;
                     saveDNAToggle.setImageResource(R.drawable.ic_save_alpha);
+                    Toast.makeText(homeActivity, "取消保存", Toast.LENGTH_SHORT).show();
                 } else {
                     homeActivity.isSaveDNAEnabled = true;
                     saveDNAToggle.setImageResource(R.drawable.ic_save_filled);
+                    Toast.makeText(homeActivity, "保存DNA成功", Toast.LENGTH_SHORT).show();
                 }
             }
         });
 
+        // 封装好的view，在播放/暂停图片位置，用于=改变切换歌曲时的效果
+        bufferingIndicator = (AVLoadingIndicatorView) view.findViewById(R.id.bufferingIndicator);
         // 播放/暂停按钮
         mainTrackController = (ImageView) view.findViewById(R.id.controller);
+        mainTrackController.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isReplayIconVisible) {
+                    homeActivity.hasQueueEnded = true;
+                    mCallback.onComplete();
+                } else {
+                    if (!pauseClicked) {
+                        pauseClicked = true;
+                    }
+                    togglePlayPause();
+                }
+            }
+        });
         // 下一首
         nextTrackController = (ImageView) view.findViewById(R.id.next);
+        nextTrackController.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mMediaPlayer.pause();
+                homeActivity.nextControllerClicked = true;
+                mCallback.onComplete();
+            }
+        });
+
         // 前一首
         previousTrackController = (ImageView) view.findViewById(R.id.previous);
-
-        isFav = false;
+        previousTrackController.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (homeActivity.queueCurrentIndex != 0) {
+                    mMediaPlayer.pause();
+                    mCallback.onPreviousTrack();
+                }
+            }
+        });
 
         // 喜欢
         favouriteIcon = (ImageView) view.findViewById(R.id.fav_icon);
-        favControllerSp = (ImageView) view.findViewById(R.id.fav_controller_sp);
-
-        if (homeActivity.isFavourite) {
-            favouriteIcon.setImageResource(R.drawable.ic_heart_filled_1);
-            favControllerSp.setImageResource(R.drawable.ic_heart_filled_1);
-            isFav = true;
-        } else {
-            favouriteIcon.setImageResource(R.drawable.ic_heart_alpha);
-            favControllerSp.setImageResource(R.drawable.ic_heart_alpha);
-            isFav = false;
-        }
-
         favouriteIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -503,17 +570,22 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                     favControllerSp.setImageResource(R.drawable.ic_heart_alpha);
                     isFav = false;
                     removeFromFavourite();
+                    Toast.makeText(homeActivity, "取消喜欢", Toast.LENGTH_SHORT).show();
                 } else {
                     favouriteIcon.setImageResource(R.drawable.ic_heart_filled_1);
                     favControllerSp.setImageResource(R.drawable.ic_heart_filled_1);
                     isFav = true;
                     addToFavourite();
+                    Toast.makeText(homeActivity, "添加到喜欢", Toast.LENGTH_SHORT).show();
                 }
+                // 保存喜欢的异步任务
                 new HomeActivity.SaveFavourites().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
 
         });
 
+
+        favControllerSp = (ImageView) view.findViewById(R.id.fav_controller_sp);
         favControllerSp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -532,6 +604,16 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             }
         });
 
+        if (homeActivity.isFavourite) {
+            favouriteIcon.setImageResource(R.drawable.ic_heart_filled_1);
+            favControllerSp.setImageResource(R.drawable.ic_heart_filled_1);
+            isFav = true;
+        } else {
+            favouriteIcon.setImageResource(R.drawable.ic_heart_alpha);
+            favControllerSp.setImageResource(R.drawable.ic_heart_alpha);
+            isFav = false;
+        }
+        // 队列
         queueIcon = (ImageView) view.findViewById(R.id.queue_icon);
         queueIcon.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -540,13 +622,26 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             }
         });
 
+        // 似乎没用，写的布局。。。
         selected_track_image = (ImageView) view.findViewById(R.id.selected_track_image_sp);
         selected_track_title = (TextView) view.findViewById(R.id.selected_track_title_sp);
         selected_track_artist = (TextView) view.findViewById(R.id.selected_track_artist_sp);
         player_controller = (ImageView) view.findViewById(R.id.player_control_sp);
-
+        player_controller.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (isReplayIconVisible) {
+                    homeActivity.hasQueueEnded = true;
+                    mCallback.onComplete();
+                } else {
+                    if (!pauseClicked) {
+                        pauseClicked = true;
+                    }
+                    togglePlayPause();
+                }
+            }
+        });
         nextControllerSp = (ImageView) view.findViewById(R.id.next_controller_sp);
-
         nextControllerSp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -556,23 +651,25 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             }
         });
 
+        // 底部三栏布局：播放/seekbar进度条
         bottomContainer = (RelativeLayout) view.findViewById(R.id.mainControllerContainer);
         seekBarContainer = (RelativeLayout) view.findViewById(R.id.seekBarContainer);
         toggleContainer = (RelativeLayout) view.findViewById(R.id.toggleContainer);
 
         mVisualizerView = (VisualizerView) view.findViewById(R.id.myvisualizerview);
-
         VisualizerView.w = HomeActivity.screen_width;
         VisualizerView.h = HomeActivity.screen_height;
         VisualizerView.conf = Bitmap.Config.ARGB_8888;
         VisualizerView.bmp = Bitmap.createBitmap(VisualizerView.w, VisualizerView.h, VisualizerView.conf);
         HomeActivity.cacheCanvas = new Canvas(VisualizerView.bmp);
 
+        // 队列适配器？
         if (HomeActivity.queue != null) {
             customAdapter = new CustomAdapter(getContext(), snappyRecyclerView, HomeActivity.queue.getQueue());
         } else {
             customAdapter = new CustomAdapter(getContext(), snappyRecyclerView, new ArrayList<UnifiedTrack>());
         }
+
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         snappyRecyclerView.setLayoutManager(linearLayoutManager);
         snappyRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -611,16 +708,7 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             }
         });
 
-
         cpb = (CustomProgressBar) view.findViewById(R.id.customProgress);
-
-        smallPlayer.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mCallback.onSmallPlayerTouched();
-            }
-        });
-
 
         track = homeActivity.selectedTrack;
         localTrack = homeActivity.localSelectedTrack;
@@ -631,6 +719,7 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             } catch (Exception e) {
 
             }
+
             if (track.getArtworkURL() != null) {
                 Picasso.with(getActivity()).load(track.getArtworkURL()).resize(100, 100).into(selected_track_image);
             } else {
@@ -666,6 +755,7 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
 
         }
 
+        // 得到总时长
         temp = getTime(durationInMilliSec);
         totalTime.setText(temp.first + ":" + temp.second);
 
@@ -703,99 +793,11 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             e.printStackTrace();
         }
 
-        overflowMenuAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // PopupMenu  动态生成布局
-                PopupMenu popMenu = new PopupMenu(getContext(), overflowMenuAB);
-                popMenu.getMenuInflater().inflate(R.menu.player_overflow_menu, popMenu.getMenu());
-
-                popMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-                    @Override
-                    public boolean onMenuItemClick(MenuItem item) {
-                        if (item.getTitle().equals("Full Screen")) {
-                            if (homeActivity.isFullScreenEnabled) {
-                                homeActivity.isFullScreenEnabled = false;
-                                bottomContainer.setVisibility(View.VISIBLE);
-                                seekBarContainer.setVisibility(View.VISIBLE);
-                                toggleContainer.setVisibility(View.VISIBLE);
-                                spToolbar.setVisibility(View.VISIBLE);
-                                mCallback.onFullScreen();
-                            } else {
-                                homeActivity.isFullScreenEnabled = true;
-                                bottomContainer.setVisibility(View.GONE);
-                                seekBarContainer.setVisibility(View.GONE);
-                                toggleContainer.setVisibility(View.GONE);
-                                spToolbar.setVisibility(View.INVISIBLE);
-                                mCallback.onFullScreen();
-                            }
-                        } else if (item.getTitle().equals("Settings")) {
-                            mCallback.onSettingsClicked();
-                        } else if (item.getTitle().equals("Add to playlist")) {
-                            UnifiedTrack ut = HomeActivity.queue.getQueue().get(HomeActivity.queueCurrentIndex);
-                            mCallback.addCurrentSongtoPlaylist(ut);
-                        }
-                        return true;
-                    }
-                });
-
-                popMenu.show();
-            }
-        });
-
-
-        player_controller.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isReplayIconVisible) {
-                    homeActivity.hasQueueEnded = true;
-                    mCallback.onComplete();
-                } else {
-                    if (!pauseClicked) {
-                        pauseClicked = true;
-                    }
-                    togglePlayPause();
-                }
-            }
-        });
-
-        mainTrackController.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isReplayIconVisible) {
-                    homeActivity.hasQueueEnded = true;
-                    mCallback.onComplete();
-                } else {
-                    if (!pauseClicked) {
-                        pauseClicked = true;
-                    }
-                    togglePlayPause();
-                }
-            }
-        });
-
-        nextTrackController.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMediaPlayer.pause();
-                homeActivity.nextControllerClicked = true;
-                mCallback.onComplete();
-            }
-        });
-
-        previousTrackController.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (homeActivity.queueCurrentIndex != 0) {
-                    mMediaPlayer.pause();
-                    mCallback.onPreviousTrack();
-                }
-            }
-        });
-
+        // seekbar
         progressBar = (SeekBar) view.findViewById(R.id.progressBar);
         progressBar.setMax(durationInMilliSec);
 
+        // TimerTask
         timer = new Timer();
         timer.scheduleAtFixedRate(
                 new TimerTask() {
@@ -920,13 +922,28 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                     }
                 }, 500);
 
-
-
-
     }
 
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (snappyRecyclerView.getCurrentPosition() != HomeActivity.queueCurrentIndex) {
+            snappyRecyclerView.scrollToPosition(HomeActivity.queueCurrentIndex);
+            snappyRecyclerView.setCurrentPosition(HomeActivity.queueCurrentIndex);
+            customAdapter.notifyDataSetChanged();
+        }
+        snappyRecyclerView.setTransparency();
+    }
+
+
     /**
-     * 暂停音乐
+     * 双开关：播放暂停音乐
      */
     public void togglePlayPause() {
         if (mMediaPlayer.isPlaying()) {
@@ -1132,10 +1149,11 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
             currentLyrics = lyrics;
             lyricsLoadingIndicator.setVisibility(View.GONE);
             if (currentLyrics.getFlag() == Lyrics.POSITIVE_RESULT) {
+                // 设置歌词显示
                 lyricsContent.setText(Html.fromHtml(currentLyrics.getText()));
                 lyricsStatus.setVisibility(View.GONE);
             } else {
-                lyricsStatus.setText("No Lyrics Found!");
+                lyricsStatus.setText(getString(R.string.No_Lyrics_Found));
                 lyricsStatus.setVisibility(View.VISIBLE);
             }
         }
@@ -1371,8 +1389,10 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
         return pair;
     }
 
+
     // 播放界面的回调方法12个
     public interface PlayerFragmentCallbackListener{
+
         void onComplete();
 
         void onPreviousTrack();
@@ -1466,6 +1486,19 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
         }
     }
 
+    public boolean isShowcaseVisible() {
+        return (showCase != null && showCase.isShowing());
+    }
+
+    public void hideShowcase() {
+        showCase.hide();
+    }
+
+    // 改变唱片艺术家背景
+    public void toggleAlbumArtBackground() {
+        snappyRecyclerView.setTransparency();
+    }
+
     /**
      * 将bitmap对象生成字符串对象
      * @param image
@@ -1476,4 +1509,30 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
         image.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOS);
         return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        RefWatcher refWatcher = MusicDNAApplication.getRefWatcher(getContext());
+        refWatcher.watch(this);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        super.onDestroy();
+        RefWatcher refWatcher = MusicDNAApplication.getRefWatcher(getContext());
+        refWatcher.watch(this);
+        if (mMediaPlayer != null) {
+            if (mMediaPlayer.isPlaying()) {
+                mMediaPlayer.stop();
+            }
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
+        if (mVisualizer != null) {
+            mVisualizer.release();
+        }
+    }
+
 }

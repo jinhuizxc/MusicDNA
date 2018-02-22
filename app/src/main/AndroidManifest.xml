@@ -21,7 +21,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/MyMaterialTheme">
-        <activity android:name=".ui.activity.SplashActivity"
+        <activity
+            android:name=".ui.activity.SplashActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,7 +36,8 @@
             android:name="io.fabric.ApiKey"
             android:value="020e360fee5fdd83e6fe111174abd62efddb08fa" />
 
-        <activity android:name=".ui.activity.HomeActivity"
+        <activity
+            android:name=".ui.activity.HomeActivity"
             android:label="@string/title_activity_home"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
@@ -62,6 +64,20 @@
                 android:resource="@xml/filepaths" />
         </provider>
 
+        <service
+            android:name=".notificationmanager.MediaPlayerService"
+            android:stopWithTask="false" />
+
+        <!--广播-->
+        <receiver android:name=".notificationmanager.AudioPlayerBroadcastReceiver">
+
+            <!--<intent-filter>-->
+                <!--<action android:name="" />-->
+                <!--<action android:name="" />-->
+                <!--<action android:name="" />-->
+            <!--</intent-filter>-->
+
+        </receiver>
 
 
     </application>

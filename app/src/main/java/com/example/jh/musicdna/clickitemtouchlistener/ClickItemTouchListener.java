@@ -11,11 +11,15 @@ import android.view.View;
 /**
  * Created by jinhui on 2018/2/17.
  * Email:1004260403@qq.com
+ *
+ * ClickItemTouchListener 的点击事件： RecyclerView.OnItemTouchListener
+ * GestureDetector类的学习
  */
 
 public abstract class ClickItemTouchListener implements RecyclerView.OnItemTouchListener {
 
     private static final String TAG = "ClickItemTouchListener";
+    // 手势触摸，可以定义view的拖动
     private GestureDetector mGestureDetector;
 
     public ClickItemTouchListener(RecyclerView hostView) {
@@ -65,6 +69,7 @@ public abstract class ClickItemTouchListener implements RecyclerView.OnItemTouch
     public abstract boolean onLongClick(RecyclerView parent, View view, int position, long id);
 
     private class ItemClickGestureDetector extends GestureDetector {
+
         private final ItemClickGestureListener mGestureListener;
 
         public ItemClickGestureDetector(Context context, ItemClickGestureListener listener) {

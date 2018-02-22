@@ -295,6 +295,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:clickable="true" />
 
+        <!--封装好的播放按钮-->
         <com.wang.avi.AVLoadingIndicatorView
             android:id="@+id/bufferingIndicator"
             android:layout_width="60dp"

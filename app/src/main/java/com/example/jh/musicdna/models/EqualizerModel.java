@@ -3,6 +3,8 @@ package com.example.jh.musicdna.models;
 /**
  * Created by jinhui on 2018/2/17.
  * Email:1004260403@qq.com
+ *
+ * 均衡器model
  */
 
 public class EqualizerModel {

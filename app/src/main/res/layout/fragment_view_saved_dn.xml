@@ -87,6 +87,7 @@
         android:background="@color/colorDark"
         android:padding="1dp" />
 
+    <!--没有保存dna的布局-->
     <LinearLayout
         android:id="@+id/no_saved_dnas"
         android:layout_width="match_parent"

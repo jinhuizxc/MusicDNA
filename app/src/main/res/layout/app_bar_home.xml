@@ -318,7 +318,7 @@
                     android:layout_below="@+id/localBanner"
                     android:layout_marginTop="0dp"
                     android:orientation="horizontal">
-
+                    <!--喜欢banner-->
                     <ImageView
                         android:id="@+id/favBanner"
                         android:layout_width="0dp"
@@ -520,6 +520,7 @@
         </RelativeLayout>
     </LinearLayout>
 
+    <!--喜欢布局-->
     <FrameLayout
         android:id="@+id/fragContainer"
         android:layout_width="match_parent"
@@ -532,6 +533,7 @@
         android:layout_height="match_parent"
         android:translationZ="5dp" />
 
+    <!--均衡器布局-->
     <FrameLayout
         android:id="@+id/equalizer_queue_frag_container"
         android:layout_width="match_parent"

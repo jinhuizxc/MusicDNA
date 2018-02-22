@@ -53,5 +53,24 @@
     <string name="QUEUE">歌曲队列</string>
     <string name="CLEAR">清空</string>
     <string name="Full_Screen">全屏</string>
+    <string name="Searching_Lyrics">搜索歌词中…</string>
+    <string name="No_Lyrics_Found">没有搜索到相关歌词</string>
+    <string name="equalizer">均衡器</string>
+    <string name="Delete">删除</string>
+    <string name="Long_Press_to_Exit">长按解锁全屏</string>
+    <string name="isReset_settings">是否重置设置？</string>
+    <string name="message">此操作将重置所有设置，但播放列表和其他内容将保持不变。</string>
+
+    <!--设置-->
+    <string name="music_dna_short_link">http://bit.ly/musicDnaApp</string>
+    <string name="share_application_text">Check out MusicDNA an awesome music player from Play Store. Link: </string>
+    <string name="license_text">MusicDNA and related material are distributed under \'Attribution-NonCommercial-ShareAlike 4.0 International license\'</string>
+    <string name="license_link">https://github.com/harjot-oberai/MusicDNA/blob/master/LICENSE.md</string>
+    <string name="Remove">移除</string>
+    <string name="New_Playlist">新的播放列表…</string>
+    <string name="Save_Queue">保存队列</string>
+    <string name="Enter_Playlist_Name">列表名不能为空</string>
+    <string name="Playlist_exists">该列表名已经存在</string>
+    <string name="Queue_saved">队列保存</string>
 
 </resources>

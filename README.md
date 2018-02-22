@@ -16,7 +16,29 @@
 2.关于图片缓存的可以参考本代码进行深度学习整理；
 3.com.squareup.leakcanary-android-no-op的库的学习；
 ```
-- 2/19
+- 2/19 播放界面
 ```
+对于歌曲播放本页面功能实现比较繁琐，必须一一整理。
 1.歌词类：Lyrics Parcelable序列化,许久都不熟悉，要去整理的！
+2.播放界面左右滑动切换歌曲，
+3.本地检索歌词/保存歌词，网络下载歌词保存本地，
+4.音乐播放服务里：MediaSessionManager/MediaSession/MediaController等不熟悉的类别，PendingIntent
+5.通知栏显示音乐的布局得做调整，可以模仿网易云音乐；
+6.mMediaPlayer的监听方法：
+setOnPreparedListener/setOnCompletionListener/setOnBufferingUpdateListener/setOnErrorListener/setOnInfoListener等
+7.GestureDetector类的学习/ RecyclerView.OnItemTouchListener
 ```
+2/20 均衡器界面功能/设置里面各功能
+```
+```
+2/21 喜欢/最近文件夹/保存dna
+```
+```
+2/22 今天完成,所有的功能必须结束。
+```
+```
+2/23 一天时间——准备简历；
+## 后续回公司把一些没有的功能根据需要补充完成，如果有可能，可以再继续做多次开发，得看时间。
+功能：
+1.是否可以从外部加入下载网络音乐，与网络视频并播放？
+2.删除歌曲

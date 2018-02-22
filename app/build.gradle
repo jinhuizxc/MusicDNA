@@ -6,7 +6,7 @@ android {
     compileSdkVersion 26
     defaultConfig {
         applicationId "com.example.jh.musicdna"
-        minSdkVersion 18
+        minSdkVersion 21
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
@@ -61,6 +61,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.0'
     compile 'com.h6ah4i.android.widget.verticalseekbar:verticalseekbar:0.7.0'
     compile 'me.priyesh:chroma:1.0.2'
+    // colorpicker库
     compile 'com.github.QuadFlask:colorpicker:0.0.12'
     compile 'com.github.amlcurran.showcaseview:library:5.4.3'
     compile 'cn.aigestudio.wheelpicker:WheelPicker:1.1.2'

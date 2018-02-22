@@ -6,6 +6,8 @@ import java.util.List;
 /**
  * Created by jinhui on 2018/2/17.
  * Email:1004260403@qq.com
+ *
+ * 所有保存的DNA
  */
 
 public class AllSavedDNA {

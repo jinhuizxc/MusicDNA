@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@color/colorDark"
     android:clickable="true"
-    tools:context="com.example.jh.musicdna.ui.fragment.FolderContentFragment.FolderContentFragment">
+    tools:context=".ui.fragment.FolderContentFragment.FolderContentFragment">
 
     <RelativeLayout
         android:id="@+id/folder_header"
@@ -44,7 +44,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_centerInParent="true"
-                android:text="FOLDER"
+                android:text="@string/Folders"
                 android:textColor="#FFFFFF"
                 android:textSize="25sp" />
 

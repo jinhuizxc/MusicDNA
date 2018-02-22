@@ -5,6 +5,8 @@ import android.graphics.Color;
 /**
  * Created by jinhui on 2018/2/16.
  * Email:1004260403@qq.com
+ *
+ * 设置Settings类
  */
 
 public class Settings {
