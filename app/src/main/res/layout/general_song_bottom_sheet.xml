@@ -62,7 +62,7 @@
             android:gravity="center_vertical"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
-            android:text="Play"
+            android:text="@string/Play"
             android:textAlignment="gravity"
             android:textColor="#111111"
             android:textSize="18sp" />
@@ -93,7 +93,7 @@
             android:layout_marginLeft="10dp"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
-            android:text="Play Next"
+            android:text="@string/Play_Next"
             android:textColor="#111111"
             android:textSize="18sp" />
 
@@ -124,7 +124,7 @@
             android:layout_marginLeft="10dp"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
-            android:text="Add to Queue"
+            android:text="@string/Add_to_Queue"
             android:textColor="#111111"
             android:textSize="18sp" />
 
@@ -155,7 +155,7 @@
             android:layout_marginLeft="10dp"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
-            android:text="Add to Playlist"
+            android:text="@string/Add_to_Playlist"
             android:textColor="#111111"
             android:textSize="18sp" />
 
@@ -185,7 +185,7 @@
             android:layout_marginLeft="10dp"
             android:paddingBottom="8dp"
             android:paddingTop="8dp"
-            android:text="Add to Favourites"
+            android:text="@string/Add_to_Favourites"
             android:textColor="#111111"
             android:textSize="18sp" />
 

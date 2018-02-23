@@ -41,6 +41,8 @@ import java.util.Random;
 /**
  * Created by jinhui on 2018/2/15.
  * Email:1004260403@qq.com
+ *
+ * 最近的界面
  */
 
 public class RecentsFragment extends Fragment implements
@@ -99,6 +101,9 @@ public class RecentsFragment extends Fragment implements
 
     }
 
+    /**
+     * 更新最近的界面
+     */
     @Override
     public void updateRecentsFragment() {
         if (HomeActivity.recentlyPlayed.getRecentlyPlayed().size() > 0) {

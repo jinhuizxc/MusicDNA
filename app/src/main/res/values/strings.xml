@@ -25,7 +25,7 @@
     <string name="SAVED_DNA">保存的DNA</string>
     <string name="album">专辑</string>
     <string name="artist">艺术家</string>
-    <string name="RECENT">最近</string>
+    <string name="RECENT">最近播放</string>
     <string name="SETTINGS">设置</string>
     <string name="DNA_Density">DNA密度</string>
     <string name="Theme_Color">主题颜色</string>
@@ -72,5 +72,9 @@
     <string name="Enter_Playlist_Name">列表名不能为空</string>
     <string name="Playlist_exists">该列表名已经存在</string>
     <string name="Queue_saved">队列保存</string>
+    <string name="Rename">重命名</string>
+    <string name="VIEW_ALL">查看所有</string>
+    <string name="Stream">流</string>
+    <string name="RecentHorizontalList">最近的水平列表</string>
 
 </resources>

@@ -41,4 +41,12 @@ public class UnifiedTrack {
         this.streamTrack = streamTrack;
     }
 
+    @Override
+    public String toString() {
+        return "UnifiedTrack{" +
+                "type=" + type +
+                ", localTrack=" + localTrack +
+                ", streamTrack=" + streamTrack +
+                '}';
+    }
 }

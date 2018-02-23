@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="@string/Play" />
+
+    <item
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="@string/Add_to_Queue" />
+
+    <item
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="@string/Delete" />
+
+    <item
+        android:icon="@android:drawable/ic_menu_add"
+        android:title="@string/Rename" />
+</menu>

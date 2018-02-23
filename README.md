@@ -29,8 +29,6 @@ setOnPreparedListener/setOnCompletionListener/setOnBufferingUpdateListener/setOn
 7.GestureDetector类的学习/ RecyclerView.OnItemTouchListener
 ```
 2/20 均衡器界面功能/设置里面各功能
-```
-```
 2/21 喜欢/最近文件夹/保存dna
 ```
 ```
@@ -38,7 +36,16 @@ setOnPreparedListener/setOnCompletionListener/setOnBufferingUpdateListener/setOn
 ```
 ```
 2/23 一天时间——准备简历；
+
+2/24 Service/BroadcastReceiver
+```
+1.项目中2个广播，1个服务；
+2.PhoneStateListener：什么监听方法？
+PhoneStateListener是给三方app监听通信状态变化的方法
+3.service里面的方法以及与界面的通讯；
+```
 ## 后续回公司把一些没有的功能根据需要补充完成，如果有可能，可以再继续做多次开发，得看时间。
 功能：
 1.是否可以从外部加入下载网络音乐，与网络视频并播放？
 2.删除歌曲
+3.头部最近播放的歌曲专辑图片不显示，待处理 2/23

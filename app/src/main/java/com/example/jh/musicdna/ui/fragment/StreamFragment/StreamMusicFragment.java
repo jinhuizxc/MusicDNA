@@ -22,6 +22,8 @@ import com.example.jh.musicdna.utils.CommonUtils;
 /**
  * Created by jinhui on 2018/2/15.
  * Email:1004260403@qq.com
+ *
+ * StreamMusicFragment界面,暂时没用到诶
  */
 
 public class StreamMusicFragment extends Fragment {
@@ -33,6 +35,10 @@ public class StreamMusicFragment extends Fragment {
     RecyclerView lv;
 
     View bottomMarginLayout;
+
+    public interface OnTrackSelectedListener {
+        void onTrackSelected(int position);
+    }
 
     @Override
     public void onAttach(Context context) {
@@ -121,8 +127,5 @@ public class StreamMusicFragment extends Fragment {
             adapter.notifyDataSetChanged();
     }
 
-    public interface OnTrackSelectedListener {
-        void onTrackSelected(int position);
-    }
 
 }

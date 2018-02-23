@@ -21,7 +21,7 @@ import com.example.jh.musicdna.ui.activity.HomeActivity;
  * Email:1004260403@qq.com
  */
 
-public class CustomGeneralBottomSheetDialog  extends BottomSheetDialogFragment implements View.OnClickListener {
+public class CustomGeneralBottomSheetDialog extends BottomSheetDialogFragment implements View.OnClickListener {
 
     LinearLayout playText, playNextText, addToQueueText, addToPlaylistText, addToFavouriteText;
 
@@ -97,19 +97,19 @@ public class CustomGeneralBottomSheetDialog  extends BottomSheetDialogFragment i
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.general_song_bottom_sheet_play_wrapper:
-                activity.bottomSheetListener(position, "Play", fragment, generalTrack.getType());
+                activity.bottomSheetListener(position, getString(R.string.Play), fragment, generalTrack.getType());
                 break;
             case R.id.general_song_bottom_sheet_play_next_wrapper:
-                activity.bottomSheetListener(position, "Play Next", fragment, generalTrack.getType());
+                activity.bottomSheetListener(position, getString(R.string.Play_Next), fragment, generalTrack.getType());
                 break;
             case R.id.general_song_bottom_sheet_add_to_queue_wrapper:
-                activity.bottomSheetListener(position, "Add to Queue", fragment, generalTrack.getType());
+                activity.bottomSheetListener(position, getString(R.string.Add_to_Queue), fragment, generalTrack.getType());
                 break;
             case R.id.general_song_bottom_sheet_add_to_playlist_wrapper:
-                activity.bottomSheetListener(position, "Add to Playlist", fragment, generalTrack.getType());
+                activity.bottomSheetListener(position, getString(R.string.Add_to_Playlist), fragment, generalTrack.getType());
                 break;
             case R.id.general_song_bottom_sheet_add_to_fav_wrapper:
-                activity.bottomSheetListener(position, "Add to Favourites", fragment, generalTrack.getType());
+                activity.bottomSheetListener(position, getString(R.string.Add_to_Favourites), fragment, generalTrack.getType());
                 break;
         }
         dismiss();

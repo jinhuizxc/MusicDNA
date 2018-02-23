@@ -47,6 +47,7 @@ import com.example.jh.musicdna.models.LocalTrack;
 import com.example.jh.musicdna.models.SavedDNA;
 import com.example.jh.musicdna.models.Track;
 import com.example.jh.musicdna.models.UnifiedTrack;
+import com.example.jh.musicdna.serviceandbroadcastreceiver.notificationmanager.AudioPlayerBroadcastReceiver;
 import com.example.jh.musicdna.ui.activity.HomeActivity;
 import com.example.jh.musicdna.utils.DownloadThread;
 import com.example.jh.musicdna.view.customviews.CustomProgressBar;
@@ -76,7 +77,9 @@ import java.util.TimerTask;
  *
  */
 
-public class PlayerFragment extends Fragment implements Lyrics.Callback {
+public class PlayerFragment extends Fragment implements
+        AudioPlayerBroadcastReceiver.onCallbackListener,
+        Lyrics.Callback {
 
     private static final String TAG = "PlayerFragment";
     public SnappyRecyclerView snappyRecyclerView;
@@ -212,7 +215,9 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
                 completed = false;
                 pauseClicked = false;
                 isPrepared = true;
+                // 启动音乐服务
                 mCallback.onPrepared();
+
                 if (homeActivity.isPlayerVisible) {
                     player_controller.setVisibility(View.VISIBLE);
                     player_controller.setImageResource(R.drawable.ic_queue_music_white_48dp);
@@ -1387,6 +1392,46 @@ public class PlayerFragment extends Fragment implements Lyrics.Callback {
         }
         Pair<String, String> pair = Pair.create(minS, secS);
         return pair;
+    }
+
+    @Override
+    public void onCallbackCalled(int i) {
+        switch (i) {
+            case 6:
+                mCallback.onPrepared();
+                break;
+            case 3:
+                if (homeActivity.queueCurrentIndex != 0) {
+                    mMediaPlayer.pause();
+                    mCallback.onPreviousTrack();
+                }
+                break;
+            case 2:
+                mMediaPlayer.pause();
+                homeActivity.nextControllerClicked = true;
+                mCallback.onComplete();
+                break;
+        }
+    }
+
+    @Override
+    public void togglePLayPauseCallback() {
+
+    }
+
+    @Override
+    public boolean getPauseClicked() {
+        return false;
+    }
+
+    @Override
+    public void setPauseClicked(boolean bool) {
+
+    }
+
+    @Override
+    public MediaPlayer getMediaPlayer() {
+        return null;
     }
 
 

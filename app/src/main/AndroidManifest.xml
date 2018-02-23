@@ -65,17 +65,17 @@
         </provider>
 
         <service
-            android:name=".notificationmanager.MediaPlayerService"
+            android:name=".serviceandbroadcastreceiver.MediaPlayerService"
             android:stopWithTask="false" />
 
         <!--广播-->
-        <receiver android:name=".notificationmanager.AudioPlayerBroadcastReceiver">
+        <receiver android:name=".serviceandbroadcastreceiver.notificationmanager.AudioPlayerBroadcastReceiver">
 
-            <!--<intent-filter>-->
-                <!--<action android:name="" />-->
-                <!--<action android:name="" />-->
-                <!--<action android:name="" />-->
-            <!--</intent-filter>-->
+            <intent-filter>
+                <action android:name="com.example.jh.musicdna.ACTION_PLAY_PAUSE" />
+                <action android:name="com.example.jh.musicdna.ACTION_NEXT" />
+                <action android:name="com.example.jh.musicdna.ACTION_PREV" />
+            </intent-filter>
 
         </receiver>
 

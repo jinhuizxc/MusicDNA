@@ -28,4 +28,10 @@ public class RecentlyPlayed {
         recentlyPlayed.add(track);
     }
 
+    @Override
+    public String toString() {
+        return "RecentlyPlayed{" +
+                "recentlyPlayed=" + recentlyPlayed +
+                '}';
+    }
 }
