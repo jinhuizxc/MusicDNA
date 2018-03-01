@@ -175,7 +175,7 @@ import static android.view.View.GONE;
  * <p>
  * 音频播放的执行，项目暂时不需要广播可以运行，与广播无关哦
  *
- * 音乐播放/通知栏
+ * PlayerFra gment音乐播放/通知栏
  *
  * 最后的最后进行测试bug；
  */
