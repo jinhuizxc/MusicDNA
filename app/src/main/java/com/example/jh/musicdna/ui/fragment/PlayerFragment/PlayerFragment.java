@@ -235,6 +235,7 @@ public class PlayerFragment extends Fragment implements
 
                 // SaveQueue/SaveRecents的异步任务进行
                 new HomeActivity.SaveQueue().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                // 保存最近音乐的异步任务？
                 new HomeActivity.SaveRecents().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
             }

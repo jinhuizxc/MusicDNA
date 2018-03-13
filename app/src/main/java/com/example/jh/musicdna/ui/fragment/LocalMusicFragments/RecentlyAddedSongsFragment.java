@@ -32,6 +32,8 @@ import com.squareup.leakcanary.RefWatcher;
 /**
  * Created by jinhui on 2018/2/16.
  * Email:1004260403@qq.com
+ *
+ * 前面3个还好理解，如何获取最近的列表？
  */
 
 public class RecentlyAddedSongsFragment extends Fragment {

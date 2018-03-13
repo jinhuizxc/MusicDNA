@@ -212,7 +212,9 @@ public class HomeActivity extends AppCompatActivity
     public static List<LocalTrack> localTrackList = new ArrayList<>();
     public static List<LocalTrack> finalLocalSearchResultList = new ArrayList<>();
     public static List<LocalTrack> finalSelectedTracks = new ArrayList<>();
+    // 最近播放音乐列表-点击最近fowllobutton触发
     public static List<LocalTrack> recentlyAddedTrackList = new ArrayList<>();
+    // 最近的列表
     public static List<LocalTrack> finalRecentlyAddedTrackSearchResultList = new ArrayList<>();
     public static List<Track> streamingTrackList = new ArrayList<>();
     public static List<Album> albums = new ArrayList<>();
@@ -4631,6 +4633,7 @@ public class HomeActivity extends AppCompatActivity
         artists.clear();
         finalArtists.clear();
 
+        // ContentResolver 读取本地音乐列表
         ContentResolver musicResolver = this.getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, MediaStore.MediaColumns.DATE_ADDED + " DESC");
@@ -4661,13 +4664,16 @@ public class HomeActivity extends AppCompatActivity
                 long duration = musicCursor.getLong(durationColumn);
                 if (duration > 10000) {
                     LocalTrack lt = new LocalTrack(thisId, thisTitle, thisArtist, thisAlbum, path, duration);
+                    //添加至音乐链表
                     localTrackList.add(lt);
                     Log.e(TAG, "localTrackList = " + localTrackList);
                     // 事实证明是有数据的：
                     // localTrackList = [LocalTrack{id=181794, title='sound', artist='<unknown>', album='actor0', path='/storage/emulated/0/chat/Resource/74/actor0/sound.mp3', duration=17189}, LocalTrack{id=181795, title='From Paris With Love', artist='Koch (BMI)', album='1062', path='/storage/emulated/0/chat/Resource/78/actor0/audio.mp3', duration=18290}]
                     finalLocalSearchResultList.add(lt);
+
                     if (recentlyAddedTrackList.size() <= 50) {
                         recentlyAddedTrackList.add(lt);
+                        // 最近的列表
                         finalRecentlyAddedTrackSearchResultList.add(lt);
                     }
 
